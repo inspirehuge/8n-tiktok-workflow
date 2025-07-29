@@ -71,7 +71,7 @@
         "contentType": "json",
         "body": {
           "chat_id": "TELEGRAM_CHAT_ID",
-          "text": "🔥 Yeni Ürün Videosu!\n🗣️ Metin: {{ $json[\"title\"] || \"metin yok\" }}\n🏷️ Etiketler: {{ $json[\"hashtags\"] || \"etiket yok\" }}\n🎬 Video: {{ $json[\"videoUrl\"] || \"link bulunamadı\" }}"
+          "text": "📦 New Potential Product Video!\n📝 Course: {{ $json[\"course\"] || \"(no data)\" }}\n💬 Description: {{ $json[\"description\"] || \"(no data)\" }}\n🏷️ Tags: {{ $json[\"tags\"] || \"(no data)\" }}\n🎥 Video: {{ $json[\"videoUrl\"] || \"(no video link)\" }}"
         },
         "options": {}
       },
