@@ -1,11 +1,20 @@
 {
-  "name": "TikTok to Telegram Workflow",
+  "name": "TikTok Product Scraper to Telegram",
   "nodes": [
     {
-      "parameters": {},
-      "id": "f6b4c8d0-1234-4567-8901-123456789abc",
-      "name": "Start",
-      "type": "n8n-nodes-base.manualTrigger",
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
       "typeVersion": 1,
       "position": [
         240,
@@ -14,19 +23,224 @@
     },
     {
       "parameters": {
-        "url": "https://api.apify.com/v2/actor-tasks/YOUR_TASK_ID/run-sync-get-dataset-items?token=YOUR_API_TOKEN",
-        "options": {
-          "headers": {
-            "Content-Type": "application/json"
-          }
-        }
+        "url": "https://api.apify.com/v2/acts/clockworks~free-tiktok-scraper/runs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "hashtags",
+              "value": "[\"#tiktokmademebuyit\", \"#productreview\", \"#amazonfinds\", \"#musthave\"]"
+            },
+            {
+              "name": "resultsPerPage",
+              "value": "20"
+            },
+            {
+              "name": "shouldDownloadCovers",
+              "value": "true"
+            },
+            {
+              "name": "shouldDownloadSlideshowImages",
+              "value": "false"
+            },
+            {
+              "name": "shouldDownloadVideos",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
       },
-      "id": "a1b2c3d4-5678-9012-3456-789012345678",
-      "name": "Fetch TikTok Data",
+      "id": "apify-scraper",
+      "name": "Apify TikTok Scraper",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [
         460,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "apify-token",
+          "name": "Apify API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/clockworks~free-tiktok-scraper/runs/{{ $json.data.id }}/dataset/items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-results",
+      "name": "Get Scraping Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "apify-token",
+          "name": "Apify API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Wait for scraping to complete\nconst runId = $input.first().json.data.id;\nconst maxWaitTime = 300000; // 5 minutes\nconst checkInterval = 10000; // 10 seconds\nlet elapsed = 0;\n\nwhile (elapsed < maxWaitTime) {\n  const response = await $http.request({\n    method: 'GET',\n    url: `https://api.apify.com/v2/acts/clockworks~free-tiktok-scraper/runs/${runId}`,\n    headers: {\n      'Authorization': `Bearer ${$credentials.apifyToken.token}`\n    }\n  });\n  \n  if (response.data.status === 'SUCCEEDED') {\n    break;\n  }\n  \n  if (response.data.status === 'FAILED') {\n    throw new Error('Apify scraping failed');\n  }\n  \n  await new Promise(resolve => setTimeout(resolve, checkInterval));\n  elapsed += checkInterval;\n}\n\nif (elapsed >= maxWaitTime) {\n  throw new Error('Scraping timeout');\n}\n\nreturn $input.all();"
+      },
+      "id": "wait-for-completion",
+      "name": "Wait for Scraping Completion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter videos by product-related keywords\nconst productKeywords = [\n  'buy', 'purchase', 'product', 'review', 'recommend', 'amazon', 'link in bio',\n  'must have', 'obsessed', 'game changer', 'worth it', 'money', 'price',\n  'deal', 'sale', 'discount', 'shopping', 'haul', 'find', 'favorite',\n  'love this', 'need this', 'get this', 'order', 'checkout', 'cart'\n];\n\nconst filteredVideos = [];\n\nfor (const item of $input.all()) {\n  const video = item.json;\n  \n  // Check if video has required fields\n  if (!video.text && !video.hashtags) continue;\n  \n  const textContent = (video.text || '').toLowerCase();\n  const hashtagsContent = (video.hashtags || []).join(' ').toLowerCase();\n  const combinedContent = textContent + ' ' + hashtagsContent;\n  \n  // Check if any product keyword is present\n  const hasProductKeyword = productKeywords.some(keyword => \n    combinedContent.includes(keyword.toLowerCase())\n  );\n  \n  if (hasProductKeyword) {\n    filteredVideos.push({\n      json: {\n        ...video,\n        videoUrl: video.webVideoUrl || video.videoUrl,\n        coverImage: video.covers?.[0] || video.imageUrl,\n        likes: video.diggCount || video.stats?.diggCount || 0,\n        shares: video.shareCount || video.stats?.shareCount || 0,\n        views: video.playCount || video.stats?.playCount || 0,\n        comments: video.commentCount || video.stats?.commentCount || 0\n      }\n    });\n  }\n}\n\nreturn filteredVideos;"
+      },
+      "id": "filter-products",
+      "name": "Filter Product Videos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Split Into Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1340,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "telegramMessage",
+              "value": "🎵 *TikTok Product Alert!*\n\n📝 *Caption:*\n{{ $json.text || 'No caption available' }}\n\n🏷️ *Hashtags:*\n{{ ($json.hashtags || []).join(' ') || 'No hashtags' }}\n\n🔗 *Watch Video:*\n{{ $json.videoUrl || $json.webVideoUrl }}\n\n📊 *Engagement Stats:*\n👍 Likes: {{ $json.likes?.toLocaleString() || '0' }}\n👁️ Views: {{ $json.views?.toLocaleString() || '0' }}\n🔄 Shares: {{ $json.shares?.toLocaleString() || '0' }}\n💬 Comments: {{ $json.comments?.toLocaleString() || '0' }}\n\n👤 *Creator:* @{{ $json.authorMeta?.name || $json.author?.uniqueId || 'Unknown' }}\n\n#TikTokFinds #ProductReview #MustHave"
+            },
+            {
+              "name": "telegramMessageFallback",
+              "value": "🎵 TikTok Product Alert!\n\nCaption: {{ $json.text || 'No caption available' }}\n\nHashtags: {{ ($json.hashtags || []).join(' ') || 'No hashtags' }}\n\nWatch Video: {{ $json.videoUrl || $json.webVideoUrl }}\n\nLikes: {{ $json.likes || '0' }} | Views: {{ $json.views || '0' }} | Shares: {{ $json.shares || '0' }}\n\nCreator: @{{ $json.authorMeta?.name || $json.author?.uniqueId || 'Unknown' }}"
+            },
+            {
+              "name": "coverImageUrl",
+              "value": "{{ $json.coverImage || $json.covers?.[0] || $json.imageUrl }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-message",
+      "name": "Set Message Text",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "chatId": "={{ $vars.TELEGRAM_CHAT_ID }}",
+        "text": "={{ $json.telegramMessage }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "disable_web_page_preview": false
+        }
+      },
+      "id": "send-telegram-text",
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1780,
+        200
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendPhoto",
+        "chatId": "={{ $vars.TELEGRAM_CHAT_ID }}",
+        "binaryData": false,
+        "photo": "={{ $json.coverImageUrl }}",
+        "additionalFields": {
+          "caption": "🖼️ Video Thumbnail\n\n{{ $json.telegramMessageFallback }}",
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "send-telegram-photo",
+      "name": "Send Telegram Photo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1780,
+        400
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "merge-results",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2000,
         300
       ]
     },
@@ -40,12 +254,12 @@
           },
           "conditions": [
             {
-              "id": "condition1",
-              "leftValue": "={{ $json.views }}",
-              "rightValue": 1000000,
+              "id": "error-condition",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
               "operator": {
-                "type": "number",
-                "operation": "gt"
+                "type": "string",
+                "operation": "notEmpty"
               }
             }
           ],
@@ -53,66 +267,161 @@
         },
         "options": {}
       },
-      "id": "b2c3d4e5-6789-0123-4567-890123456789",
-      "name": "Filter Products",
+      "id": "error-handler",
+      "name": "Error Handler",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        680,
+        2220,
         300
       ]
     },
     {
       "parameters": {
-        "url": "https://api.telegram.org/botTELEGRAM_BOT_TOKEN/sendMessage",
-        "sendQuery": false,
-        "sendHeaders": false,
-        "sendBody": true,
-        "contentType": "json",
-        "body": {
-          "chat_id": "TELEGRAM_CHAT_ID",
-          "text": "🔥 Yeni Ürün Videosu!\n🗣️ Metin: {{ $json[\"title\"] || \"metin yok\" }}\n🏷️ Etiketler: {{ $json[\"hashtags\"] || \"etiket yok\" }}\n🎬 Video: {{ $json[\"videoUrl\"] || \"link bulunamadı\" }}"
-        },
-        "options": {}
+        "resource": "message",
+        "chatId": "={{ $vars.TELEGRAM_CHAT_ID }}",
+        "text": "🚨 *TikTok Scraper Error*\n\nAn error occurred while scraping TikTok videos:\n\n`{{ $json.error || 'Unknown error' }}`\n\nPlease check the workflow configuration.",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
       },
-      "id": "c3d4e5f6-7890-1234-5678-901234567890",
-      "name": "Send to Telegram",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "id": "send-error-notification",
+      "name": "Send Error Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
-        900,
-        300
-      ]
+        2440,
+        200
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot Token"
+        }
+      }
     }
   ],
   "connections": {
-    "Start": {
+    "Cron Trigger": {
       "main": [
         [
           {
-            "node": "Fetch TikTok Data",
+            "node": "Apify TikTok Scraper",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Fetch TikTok Data": {
+    "Apify TikTok Scraper": {
       "main": [
         [
           {
-            "node": "Filter Products",
+            "node": "Wait for Scraping Completion",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Filter Products": {
+    "Wait for Scraping Completion": {
       "main": [
         [
           {
-            "node": "Send to Telegram",
+            "node": "Get Scraping Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Scraping Results": {
+      "main": [
+        [
+          {
+            "node": "Filter Product Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Product Videos": {
+      "main": [
+        [
+          {
+            "node": "Split Into Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Batches": {
+      "main": [
+        [
+          {
+            "node": "Set Message Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Message Text": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Telegram Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram Photo": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Send Error Notification",
             "type": "main",
             "index": 0
           }
@@ -120,14 +429,20 @@
       ]
     }
   },
-  "active": false,
+  "pinData": {},
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "12345678-1234-1234-1234-123456789012",
-  "meta": {
-    "templateCredsSetupCompleted": true
-  },
-  "id": "87654321-4321-4321-4321-210987654321",
-  "tags": []
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "id": "tiktok-scraper",
+      "name": "TikTok Scraper"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
 }
