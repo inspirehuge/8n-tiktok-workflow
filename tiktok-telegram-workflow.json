@@ -1,0 +1,133 @@
+{
+  "name": "TikTok to Telegram Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "f6b4c8d0-1234-4567-8901-123456789abc",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.apify.com/v2/actor-tasks/YOUR_TASK_ID/run-sync-get-dataset-items?token=YOUR_API_TOKEN",
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      "id": "a1b2c3d4-5678-9012-3456-789012345678",
+      "name": "Fetch TikTok Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition1",
+              "leftValue": "={{ $json.views }}",
+              "rightValue": 1000000,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b2c3d4e5-6789-0123-4567-890123456789",
+      "name": "Filter Products",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/botTELEGRAM_BOT_TOKEN/sendMessage",
+        "sendQuery": false,
+        "sendHeaders": false,
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "chat_id": "TELEGRAM_CHAT_ID",
+          "text": "🔥 Yeni Ürün Videosu!\n🗣️ Metin: {{ $json[\"title\"] || \"metin yok\" }}\n🏷️ Etiketler: {{ $json[\"hashtags\"] || \"etiket yok\" }}\n🎬 Video: {{ $json[\"videoUrl\"] || \"link bulunamadı\" }}"
+        },
+        "options": {}
+      },
+      "id": "c3d4e5f6-7890-1234-5678-901234567890",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        900,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Fetch TikTok Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch TikTok Data": {
+      "main": [
+        [
+          {
+            "node": "Filter Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Products": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "12345678-1234-1234-1234-123456789012",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "87654321-4321-4321-4321-210987654321",
+  "tags": []
+}
