@@ -1,0 +1,121 @@
+{
+  "name": "TikTok Product Finder",
+  "nodes": [
+    {
+      "parameters": {
+        "functionCode": "return [\n  { json: { hashtag: 'tiktokmademebuyit', type: 'hashtag' } }\n];"
+      },
+      "name": "Set Hashtag Input",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "resource": "execution",
+        "operation": "runWorkflow",
+        "workflowId": "tiktok-fetch-workflow"
+      },
+      "name": "Fetch TikTok Data",
+      "type": "n8n-nodes-base.apify",
+      "typeVersion": 1,
+      "position": [300, 300],
+      "credentials": {
+        "apifyApi": "Apify API Key"
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const keywords = [\n  'product', 'buy', 'musthave', 'wishlist', 'finds', 'review', 'unboxing', 'haul',\n  'amazon', 'amazonfinds', 'amazonmusthaves', 'tiktokmademebuyit', 'tiktokamazonfinds',\n  'bestbuy', 'topfinds', 'buynow', 'dealsoftheday', 'aliexpress', 'aliexpressfinds',\n  'homefinds', 'kitchenfinds', 'organizerfinds', 'skincarefinds', 'beautyfinds', 'gymfinds',\n  'cleaningtiktok', 'shopeefinds', 'viralproduct', 'testedontiktok', 'beforeandafter',\n  'recommendation', 'worthit'\n];\n\nconst validItems = items.filter(i => typeof i.json === 'object' && i.json !== null);\n\nconst filtered = validItems.filter(item => {\n  const text = item.json.text?.toLowerCase() || '';\n  const hashtags = item.json.hashtags?.map(h => h.name.toLowerCase()) || [];\n  const foundInText = keywords.some(word => text.includes(word));\n  const foundInHashtags = keywords.some(word => hashtags.includes(word));\n  return foundInText || foundInHashtags;\n});\n\nreturn filtered;"
+      },
+      "name": "Filter Products",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1
+      },
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage",
+        "method": "POST",
+        "sendBody": true,
+        "options": {},
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "chat_id",
+              "value": "<YOUR_CHAT_ID>"
+            },
+            {
+              "name": "text",
+              "value": "🔥 Yeni Potansiyel Ürün Videosu!\n💬 Metin: {{$json.text || '(metin yok)'}}\n🎥 Video: https://www.tiktok.com/@{{$json.authorMeta?.username || 'unknown'}}/video/{{$json.id || 'bulunamadı'}}\n🏷️ Etiketler: {{$json.hashtags ? $json.hashtags.map(h => h.name).join(', ') : '(etiket yok)'}}"
+            },
+            {
+              "name": "parse_mode",
+              "value": "Markdown"
+            }
+          ]
+        }
+      },
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Set Hashtag Input": {
+      "main": [
+        [
+          {
+            "node": "Fetch TikTok Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch TikTok Data": {
+      "main": [
+        [
+          {
+            "node": "Filter Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Products": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
