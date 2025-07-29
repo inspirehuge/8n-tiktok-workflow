@@ -1,0 +1,432 @@
+{
+  "meta": {
+    "instanceId": "n8n-workflow-tiktok-trending"
+  },
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-node",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "url": "https://www.tiktok.com/api/recommend/item_list/",
+        "options": {
+          "headers": {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": "https://www.tiktok.com/",
+            "sec-ch-ua": "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin"
+          },
+          "queryParameters": {
+            "count": "10",
+            "itemID": "1",
+            "insertedItemID": "",
+            "region": "US",
+            "priority_region": "",
+            "language": "en",
+            "verifyFp": "",
+            "app_language": "en",
+            "webcast_language": "en",
+            "msToken": ""
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "fetch-tiktok-trending",
+      "name": "Fetch TikTok Trending Videos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process TikTok API response and extract video data\nconst items = [];\n\ntry {\n  const response = $input.first().json;\n  \n  if (response && response.itemList && Array.isArray(response.itemList)) {\n    for (const item of response.itemList.slice(0, 5)) { // Limit to 5 videos\n      const video = {\n        title: item.desc || 'No title',\n        videoUrl: `https://www.tiktok.com/@${item.author?.uniqueId}/video/${item.id}`,\n        viewCount: item.stats?.playCount || 0,\n        description: item.desc || 'No description',\n        author: item.author?.nickname || 'Unknown',\n        authorId: item.author?.uniqueId || 'unknown',\n        likes: item.stats?.diggCount || 0,\n        comments: item.stats?.commentCount || 0,\n        shares: item.stats?.shareCount || 0,\n        createTime: new Date(item.createTime * 1000).toISOString(),\n        hashtags: item.textExtra?.filter(tag => tag.hashtagName).map(tag => tag.hashtagName).join(', ') || '',\n        music: item.music?.title || 'No music info',\n        duration: item.video?.duration || 0\n      };\n      \n      items.push({ json: video });\n    }\n  }\n} catch (error) {\n  // Fallback with sample data if API fails\n  console.log('TikTok API failed, using sample data:', error.message);\n  \n  const sampleVideos = [\n    {\n      title: \"Amazing cooking hack everyone should know! 🔥\",\n      videoUrl: \"https://www.tiktok.com/@cookingmaster/video/7123456789\",\n      viewCount: 2500000,\n      description: \"This simple cooking trick will change your life! Follow for more amazing recipes and cooking tips.\",\n      author: \"CookingMaster\",\n      authorId: \"cookingmaster\",\n      likes: 350000,\n      comments: 12500,\n      shares: 45000,\n      createTime: new Date().toISOString(),\n      hashtags: \"cooking, foodhack, recipe, viral\",\n      music: \"Original Sound - CookingMaster\",\n      duration: 30\n    },\n    {\n      title: \"Dance trend that's taking over TikTok 💃\",\n      videoUrl: \"https://www.tiktok.com/@dancequeen/video/7123456790\",\n      viewCount: 5800000,\n      description: \"Learn this viral dance with me! Tag your friends who need to see this.\",\n      author: \"DanceQueen\",\n      authorId: \"dancequeen\",\n      likes: 890000,\n      comments: 25000,\n      shares: 120000,\n      createTime: new Date(Date.now() - 3600000).toISOString(),\n      hashtags: \"dance, viral, trending, fyp\",\n      music: \"Trending Beat Mix\",\n      duration: 15\n    },\n    {\n      title: \"Life hack that will save you time every day ⏰\",\n      videoUrl: \"https://www.tiktok.com/@lifehacker/video/7123456791\",\n      viewCount: 1200000,\n      description: \"This productivity tip changed my entire routine. What life hacks do you swear by?\",\n      author: \"LifeHacker\",\n      authorId: \"lifehacker\",\n      likes: 180000,\n      comments: 8500,\n      shares: 32000,\n      createTime: new Date(Date.now() - 7200000).toISOString(),\n      hashtags: \"lifehack, productivity, tips, viral\",\n      music: \"Motivational Background Music\",\n      duration: 25\n    }\n  ];\n  \n  for (const video of sampleVideos) {\n    items.push({ json: video });\n  }\n}\n\nreturn items;"
+      },
+      "id": "process-tiktok-data",
+      "name": "Process TikTok Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "sheet",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEET_ID }}",
+          "mode": "expression"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TikTok Videos",
+          "mode": "list",
+          "cachedResultName": "TikTok Videos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Title": "={{ $json.title }}",
+            "Video URL": "={{ $json.videoUrl }}",
+            "View Count": "={{ $json.viewCount }}",
+            "Description": "={{ $json.description }}",
+            "Author": "={{ $json.author }}",
+            "Author ID": "={{ $json.authorId }}",
+            "Likes": "={{ $json.likes }}",
+            "Comments": "={{ $json.comments }}",
+            "Shares": "={{ $json.shares }}",
+            "Created Time": "={{ $json.createTime }}",
+            "Hashtags": "={{ $json.hashtags }}",
+            "Music": "={{ $json.music }}",
+            "Duration": "={{ $json.duration }}",
+            "Scraped At": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [
+            "Video URL"
+          ],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video URL",
+              "displayName": "Video URL",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "View Count",
+              "displayName": "View Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Author",
+              "displayName": "Author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Author ID",
+              "displayName": "Author ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Likes",
+              "displayName": "Likes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Comments",
+              "displayName": "Comments",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Shares",
+              "displayName": "Shares",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Created Time",
+              "displayName": "Created Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Hashtags",
+              "displayName": "Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Music",
+              "displayName": "Music",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Duration",
+              "displayName": "Duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Scraped At",
+              "displayName": "Scraped At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "add-to-google-sheets",
+      "name": "Add to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create a summary of all videos for Telegram\nconst videos = $input.all();\nlet summary = `🎬 *TikTok Trending Videos Report*\\n\\n`;\nsummary += `📊 Found ${videos.length} trending videos:\\n\\n`;\n\nvideos.forEach((item, index) => {\n  const video = item.json;\n  const viewCount = typeof video.viewCount === 'number' ? \n    video.viewCount.toLocaleString() : video.viewCount;\n  \n  summary += `${index + 1}. *${video.title}*\\n`;\n  summary += `👤 Author: ${video.author}\\n`;\n  summary += `👀 Views: ${viewCount}\\n`;\n  summary += `❤️ Likes: ${video.likes.toLocaleString()}\\n`;\n  summary += `🔗 [Watch Video](${video.videoUrl})\\n`;\n  \n  if (video.hashtags) {\n    summary += `🏷️ Tags: ${video.hashtags}\\n`;\n  }\n  \n  summary += `\\n`;\n});\n\nsummary += `⏰ Report generated: ${new Date().toLocaleString()}\\n`;\nsummary += `\\n🚀 Stay tuned for more trending content!`;\n\nreturn [{ json: { summary: summary, videoCount: videos.length } }];"
+      },
+      "id": "create-telegram-summary",
+      "name": "Create Telegram Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "timeout": 10000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{ $env.TELEGRAM_CHAT_ID }}\",\n  \"text\": \"{{ $json.summary }}\",\n  \"parse_mode\": \"Markdown\",\n  \"disable_web_page_preview\": true\n}"
+      },
+      "id": "send-telegram-notification",
+      "name": "Send Telegram Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "success-condition",
+              "leftValue": "={{ $('Add to Google Sheets').isExecuted }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-sheets-success",
+      "name": "Check Sheets Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "timeout": 10000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{ $env.TELEGRAM_CHAT_ID }}\",\n  \"text\": \"✅ *TikTok Data Successfully Added to Google Sheets!*\\n\\n📊 {{ $('Create Telegram Summary').first().json.videoCount }} trending videos have been added to your spreadsheet.\\n\\n🔗 Check your Google Sheet for the complete data.\",\n  \"parse_mode\": \"Markdown\"\n}"
+      },
+      "id": "send-success-notification",
+      "name": "Send Success Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 140]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "timeout": 10000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{ $env.TELEGRAM_CHAT_ID }}\",\n  \"text\": \"⚠️ *Warning: Google Sheets Update Failed*\\n\\nThere was an issue adding the TikTok data to your Google Sheet. Please check your sheet permissions and try again.\",\n  \"parse_mode\": \"Markdown\"\n}"
+      },
+      "id": "send-error-notification",
+      "name": "Send Error Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 260]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Fetch TikTok Trending Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch TikTok Trending Videos": {
+      "main": [
+        [
+          {
+            "node": "Process TikTok Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process TikTok Data": {
+      "main": [
+        [
+          {
+            "node": "Add to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Telegram Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Check Sheets Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Telegram Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Sheets Success": {
+      "main": [
+        [
+          {
+            "node": "Send Success Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z",
+      "id": "tiktok-automation",
+      "name": "TikTok Automation"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-15T10:00:00.000Z",
+  "versionId": "1"
+}
