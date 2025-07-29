@@ -1,0 +1,430 @@
+{
+  "name": "TikTok Product Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "8c5e4c8c-8c5e-4c8c-8c5e-4c8c8c5e4c8c",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "actor",
+        "operation": "call",
+        "actorId": "apify/tiktok-scraper",
+        "runSync": true,
+        "options": {},
+        "inputsUi": {
+          "inputsValues": [
+            {
+              "name": "hashtags",
+              "value": "=[\"tiktokmademebuyit\", \"amazonfinds\", \"aliexpressfinds\", \"viralproduct\", \"musthave\"]"
+            },
+            {
+              "name": "resultsPerPage",
+              "value": "=50"
+            },
+            {
+              "name": "shouldDownloadCovers",
+              "value": "=true"
+            },
+            {
+              "name": "shouldDownloadSlideshowImages",
+              "value": "=false"
+            },
+            {
+              "name": "shouldDownloadSubtitles",
+              "value": "=false"
+            },
+            {
+              "name": "shouldDownloadVideos",
+              "value": "=false"
+            }
+          ]
+        }
+      },
+      "id": "1a2b3c4d-1a2b-3c4d-1a2b-3c4d1a2b3c4d",
+      "name": "Apify TikTok Scraper",
+      "type": "n8n-nodes-base.apify",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "apifyApi": {
+          "id": "apify_credentials",
+          "name": "Apify Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter_condition_1",
+              "leftValue": "={{ $json.desc || $json.text || '' }}",
+              "rightValue": "product|buy|musthave|wishlist|finds|review|unboxing|haul|amazon|aliexpress|organizerfinds|gymfinds|beautyfinds|viralproduct|testedontiktok|recommendation|worthit|tiktokmademebuyit",
+              "operator": {
+                "type": "regex",
+                "operation": "regex",
+                "rightType": "any"
+              }
+            },
+            {
+              "id": "filter_condition_2",
+              "leftValue": "={{ ($json.cha_list || []).map(h => h.cha_name || h.name || '').join(' ') }}",
+              "rightValue": "product|buy|musthave|wishlist|finds|review|unboxing|haul|amazon|aliexpress|organizerfinds|gymfinds|beautyfinds|viralproduct|testedontiktok|recommendation|worthit|tiktokmademebuyit",
+              "operator": {
+                "type": "regex",
+                "operation": "regex",
+                "rightType": "any"
+              }
+            },
+            {
+              "id": "filter_condition_3",
+              "leftValue": "={{ $json.statistics?.digg_count || $json.diggCount || 0 }}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "2b3c4d5e-2b3c-4d5e-2b3c-4d5e2b3c4d5e",
+      "name": "Filter Product Videos",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "3c4d5e6f-3c4d-5e6f-3c4d-5e6f3c4d5e6f",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $vars.TELEGRAM_CHAT_ID }}",
+        "text": "🔥 New Potential Winning Product!\n\n💬 Text: {{ $json.desc || $json.text || '(no text)' }}\n\n🏷️ Hashtags: {{ $json.cha_list ? $json.cha_list.map(h => '#' + (h.cha_name || h.name || '')).join(' ') : '(no hashtags)' }}\n\n🎥 Video: {{ $json.webVideoUrl || $json.share_url || ('https://www.tiktok.com/@' + ($json.author?.unique_id || $json.authorMeta?.username || 'unknown') + '/video/' + ($json.aweme_id || $json.id || 'unknown')) }}\n\n📊 Stats: ❤️ {{ $json.statistics?.digg_count || $json.diggCount || 0 }} | 💬 {{ $json.statistics?.comment_count || $json.commentCount || 0 }} | 🔄 {{ $json.statistics?.share_count || $json.shareCount || 0 }} | 👀 {{ $json.statistics?.play_count || $json.playCount || 0 }}\n\n👤 Creator: @{{ $json.author?.unique_id || $json.authorMeta?.username || 'unknown' }}",
+        "additionalFields": {
+          "disable_web_page_preview": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "4d5e6f7g-4d5e-6f7g-4d5e-6f7g4d5e6f7g",
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        200
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_credentials",
+          "name": "Telegram Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "image_check_condition",
+              "leftValue": "={{ $json.video?.cover?.url_list?.[0] || $json.covers?.default || $json.covers?.origin || $json.video?.origin_cover?.url_list?.[0] || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e6f7g8h-5e6f-7g8h-5e6f-7g8h5e6f7g8h",
+      "name": "Check If Image Available",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $vars.TELEGRAM_CHAT_ID }}",
+        "binaryData": false,
+        "photo": "={{ $json.video?.cover?.url_list?.[0] || $json.covers?.default || $json.covers?.origin || $json.video?.origin_cover?.url_list?.[0] }}",
+        "additionalFields": {
+          "caption": "📸 Thumbnail for: {{ ($json.desc || $json.text || 'TikTok Video').substring(0, 100) + (($json.desc || $json.text || '').length > 100 ? '...' : '') }}"
+        }
+      },
+      "id": "6f7g8h9i-6f7g-8h9i-6f7g-8h9i6f7g8h9i",
+      "name": "Send Telegram Photo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        1340,
+        400
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_credentials",
+          "name": "Telegram Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "7g8h9i0j-7g8h-9i0j-7g8h-9i0j7g8h9i0j",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "batch_complete_condition",
+              "leftValue": "={{ $('Split In Batches').context.noItemsLeft }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8h9i0j1k-8h9i-0j1k-8h9i-0j1k8h9i0j1k",
+      "name": "Check Batch Complete",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $vars.TELEGRAM_CHAT_ID }}",
+        "text": "✅ TikTok Product Scan Complete!\n\n📊 Total videos processed: {{ $json.length || 0 }}\n🎯 Product videos found and sent\n⏰ Next scan in 1 hour",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "9i0j1k2l-9i0j-1k2l-9i0j-1k2l9i0j1k2l",
+      "name": "Send Completion Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_credentials",
+          "name": "Telegram Credentials"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Apify TikTok Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify TikTok Scraper": {
+      "main": [
+        [
+          {
+            "node": "Filter Product Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Product Videos": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check If Image Available",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Image Available": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram Photo": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Check Batch Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Batch Complete": {
+      "main": [
+        [
+          {
+            "node": "Send Completion Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "tiktok-product-tracker-workflow"
+  },
+  "id": "tiktok-product-tracker",
+  "tags": [
+    {
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "id": "social-media",
+      "name": "Social Media"
+    },
+    {
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "id": "product-tracking",
+      "name": "Product Tracking"
+    }
+  ]
+}
