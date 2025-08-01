@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Viral Bot Control Panel</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        .run-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+            transition: background-color 0.3s;
+        }
+        .run-button:hover {
+            background: #218838;
+        }
+        .run-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .status {
+            margin: 10px 0;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .running {
+            color: #ffc107;
+        }
+        .logs-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .logs-link:hover {
+            text-decoration: underline;
+        }
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .description {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 TikTok Viral Bot Control Panel</h1>
+        
+        <div class="description">
+            <strong>Bot Function:</strong> This bot scrapes Reddit (r/shutupandtakemymoney, r/BuyItForLife) for product keywords, 
+            searches TikTok for viral videos (10K+ views, last 48 hours), and sends filtered results to Telegram.
+            <br><br>
+            <strong>Automatic Schedule:</strong> Runs every 15 minutes automatically. Use the button below for manual runs.
+        </div>
+
+        <div class="status-card">
+            <h3>Current Status</h3>
+            <div class="status">
+                <strong>Bot Status:</strong> 
+                <span id="bot-status" class="{% if bot_running %}running{% else %}success{% endif %}">
+                    {% if bot_running %}
+                        <div class="spinner"></div>Running...
+                    {% else %}
+                        Ready
+                    {% endif %}
+                </span>
+            </div>
+            
+            {% if last_run_time %}
+            <div class="status">
+                <strong>Last Run:</strong> {{ last_run_time }}
+            </div>
+            {% endif %}
+            
+            {% if last_run_status %}
+            <div class="status">
+                <strong>Last Result:</strong> 
+                <span class="{% if 'Success' in last_run_status %}success{% else %}error{% endif %}">
+                    {{ last_run_status }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+
+        <button id="run-btn" class="run-button" onclick="runBot()" {% if bot_running %}disabled{% endif %}>
+            {% if bot_running %}
+                <div class="spinner"></div>Running Bot...
+            {% else %}
+                🚀 Run Bot Now
+            {% endif %}
+        </button>
+
+        <div style="text-align: center;">
+            <a href="/logs" class="logs-link" target="_blank">📋 View Logs</a>
+        </div>
+    </div>
+
+    <script>
+        function runBot() {
+            const button = document.getElementById('run-btn');
+            const status = document.getElementById('bot-status');
+            
+            button.disabled = true;
+            button.innerHTML = '<div class="spinner"></div>Starting Bot...';
+            status.innerHTML = '<div class="spinner"></div>Starting...';
+            status.className = 'running';
+            
+            fetch('/run_bot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    status.innerHTML = '<div class="spinner"></div>Running...';
+                    status.className = 'running';
+                    button.innerHTML = '<div class="spinner"></div>Running Bot...';
+                    
+                    // Poll for status updates
+                    pollStatus();
+                } else {
+                    status.innerHTML = 'Error: ' + data.message;
+                    status.className = 'error';
+                    button.disabled = false;
+                    button.innerHTML = '🚀 Run Bot Now';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                status.innerHTML = 'Error: ' + error.message;
+                status.className = 'error';
+                button.disabled = false;
+                button.innerHTML = '🚀 Run Bot Now';
+            });
+        }
+        
+        function pollStatus() {
+            const interval = setInterval(() => {
+                fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.running) {
+                        // Bot finished
+                        clearInterval(interval);
+                        const button = document.getElementById('run-btn');
+                        const status = document.getElementById('bot-status');
+                        
+                        button.disabled = false;
+                        button.innerHTML = '🚀 Run Bot Now';
+                        status.innerHTML = 'Ready';
+                        status.className = 'success';
+                        
+                        // Refresh page to show updated results
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Status polling error:', error);
+                    clearInterval(interval);
+                });
+            }, 2000); // Poll every 2 seconds
+        }
+        
+        // Auto-refresh status every 30 seconds
+        setInterval(() => {
+            if (!document.getElementById('run-btn').disabled) {
+                fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.last_run_time || data.last_run_status) {
+                        window.location.reload();
+                    }
+                });
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
