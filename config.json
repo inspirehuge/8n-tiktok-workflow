@@ -1,0 +1,27 @@
+{
+  "telegram_bot_token": "BURAYA_TELEGRAM_BOT_TOKEN_YAPISTIR",
+  "telegram_chat_id": "BURAYA_CHAT_ID_YAPISTIR",
+  "hashtags": [
+    "tiktokmademebuyit",
+    "amazonfinds", 
+    "viralproducts",
+    "musthaveproducts",
+    "trendingproducts",
+    "gadgettok",
+    "buyitnow",
+    "problemSolved",
+    "usefulgadgets",
+    "aliexpressfinds",
+    "usefulproducts",
+    "amazongems",
+    "shopwithme",
+    "founditonamazon",
+    "productreview",
+    "tiktokmademebuythis"
+  ],
+  "min_views": 10000,
+  "max_age_hours": 1,
+  "scan_interval_minutes": 60,
+  "max_videos_per_hashtag": 20,
+  "rate_limit_seconds": 2
+}
