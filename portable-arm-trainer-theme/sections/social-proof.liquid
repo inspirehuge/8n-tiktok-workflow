@@ -1,0 +1,213 @@
+{{ 'section-social-proof.css' | asset_url | stylesheet_tag }}
+
+<div class="social-proof color-{{ section.settings.color_scheme }} gradient">
+  <div class="page-width section-{{ section.id }}-padding">
+    {%- if section.settings.heading != blank -%}
+      <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin">
+        <h2 class="title h1 center">
+          {{ section.settings.heading | escape }}
+        </h2>
+      </div>
+    {%- endif -%}
+
+    {%- if section.settings.show_trustpilot -%}
+      <div class="social-proof__overall-rating center">
+        <div class="overall-rating">
+          <div class="overall-rating__stars">
+            ⭐⭐⭐⭐⭐
+          </div>
+          <div class="overall-rating__text">
+            <strong>{{ section.settings.overall_rating }}/5</strong> based on {{ section.settings.total_reviews }} reviews
+          </div>
+          <div class="overall-rating__badges">
+            <span class="trust-badge">Trustpilot</span>
+            <span class="trust-badge">Google Reviews</span>
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+
+    <div class="social-proof__reviews grid grid--1-col grid--2-col-tablet grid--3-col-desktop">
+      {%- for block in section.blocks -%}
+        <div class="grid__item social-proof__review" {{ block.shopify_attributes }}>
+          <div class="review-card">
+            <div class="review-card__stars">
+              {%- assign stars = block.settings.stars -%}
+              {%- for i in (1..5) -%}
+                {%- if i <= stars -%}
+                  ⭐
+                {%- else -%}
+                  ☆
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+            
+            <blockquote class="review-card__text">
+              "{{ block.settings.review_text | escape }}"
+            </blockquote>
+            
+            <div class="review-card__author">
+              <div class="review-card__avatar">
+                {%- if block.settings.avatar_url != blank -%}
+                  <img src="{{ block.settings.avatar_url }}" alt="{{ block.settings.reviewer_name }}" loading="lazy">
+                {%- else -%}
+                  <div class="review-card__avatar-placeholder">
+                    {{ block.settings.reviewer_name | slice: 0 }}
+                  </div>
+                {%- endif -%}
+              </div>
+              <div class="review-card__author-info">
+                <cite class="review-card__name">{{ block.settings.reviewer_name | escape }}</cite>
+                {%- if block.settings.reviewer_location != blank -%}
+                  <div class="review-card__location">{{ block.settings.reviewer_location | escape }}</div>
+                {%- endif -%}
+              </div>
+            </div>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+
+    <div class="social-proof__cta center">
+      <a href="#buy-now" class="button button--primary">
+        Join Thousands of Happy Customers
+      </a>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Social Proof",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Join 50,000+ Happy Customers",
+      "label": "Heading"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_trustpilot",
+      "default": true,
+      "label": "Show overall rating"
+    },
+    {
+      "type": "text",
+      "id": "overall_rating",
+      "default": "4.8",
+      "label": "Overall rating"
+    },
+    {
+      "type": "text",
+      "id": "total_reviews",
+      "default": "2,847",
+      "label": "Total reviews"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "accent-1",
+          "label": "Accent 1"
+        },
+        {
+          "value": "accent-2",
+          "label": "Accent 2"
+        },
+        {
+          "value": "background-1",
+          "label": "Background 1"
+        },
+        {
+          "value": "background-2",
+          "label": "Background 2"
+        },
+        {
+          "value": "inverse",
+          "label": "Inverse"
+        }
+      ],
+      "default": "background-1",
+      "label": "Color scheme"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "review",
+      "name": "Review",
+      "settings": [
+        {
+          "type": "range",
+          "id": "stars",
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "default": 5,
+          "label": "Star rating"
+        },
+        {
+          "type": "textarea",
+          "id": "review_text",
+          "default": "Great product! Highly recommended.",
+          "label": "Review text"
+        },
+        {
+          "type": "text",
+          "id": "reviewer_name",
+          "default": "John D.",
+          "label": "Reviewer name"
+        },
+        {
+          "type": "text",
+          "id": "reviewer_location",
+          "default": "New York, NY",
+          "label": "Reviewer location"
+        },
+        {
+          "type": "url",
+          "id": "avatar_url",
+          "label": "Avatar image URL"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Social Proof",
+      "blocks": [
+        {
+          "type": "review",
+          "settings": {
+            "stars": 5,
+            "review_text": "Amazing product! Results in just 2 weeks.",
+            "reviewer_name": "Sarah M.",
+            "reviewer_location": "New York, NY"
+          }
+        },
+        {
+          "type": "review",
+          "settings": {
+            "stars": 5,
+            "review_text": "So convenient and effective. Love it!",
+            "reviewer_name": "Mike R.",
+            "reviewer_location": "Los Angeles, CA"
+          }
+        },
+        {
+          "type": "review",
+          "settings": {
+            "stars": 5,
+            "review_text": "Perfect for my small apartment. Quiet too!",
+            "reviewer_name": "Jessica L.",
+            "reviewer_location": "Chicago, IL"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

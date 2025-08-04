@@ -1,0 +1,140 @@
+{{ 'section-benefit-cards.css' | asset_url | stylesheet_tag }}
+
+<div class="benefit-cards color-{{ section.settings.color_scheme }} gradient">
+  <div class="page-width section-{{ section.id }}-padding">
+    {%- if section.settings.heading != blank -%}
+      <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin">
+        <h2 class="title h1">
+          {{ section.settings.heading | escape }}
+        </h2>
+      </div>
+    {%- endif -%}
+
+    <div class="benefit-cards__grid grid grid--1-col grid--2-col-tablet grid--4-col-desktop">
+      {%- for block in section.blocks -%}
+        <div class="grid__item benefit-cards__item" {{ block.shopify_attributes }}>
+          <div class="benefit-card">
+            <div class="benefit-card__icon">
+              {{ block.settings.icon }}
+            </div>
+            <h3 class="benefit-card__title h4">
+              {{ block.settings.title | escape }}
+            </h3>
+            <p class="benefit-card__description">
+              {{ block.settings.description | escape }}
+            </p>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Benefit Cards",
+  "tag": "section", 
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Why Choose Our Product?",
+      "label": "Heading"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "accent-1",
+          "label": "Accent 1"
+        },
+        {
+          "value": "accent-2",
+          "label": "Accent 2"
+        },
+        {
+          "value": "background-1",
+          "label": "Background 1"
+        },
+        {
+          "value": "background-2",
+          "label": "Background 2"
+        },
+        {
+          "value": "inverse",
+          "label": "Inverse"
+        }
+      ],
+      "default": "background-2",
+      "label": "Color scheme"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "benefit",
+      "name": "Benefit",
+      "settings": [
+        {
+          "type": "text",
+          "id": "icon",
+          "default": "⭐",
+          "label": "Icon (emoji or text)"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "default": "Benefit Title",
+          "label": "Title"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "default": "Benefit description goes here.",
+          "label": "Description"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Benefit Cards",
+      "blocks": [
+        {
+          "type": "benefit",
+          "settings": {
+            "icon": "🔇",
+            "title": "Silent Operation",
+            "description": "Work out anytime without disturbing others."
+          }
+        },
+        {
+          "type": "benefit",
+          "settings": {
+            "icon": "🏠", 
+            "title": "Any Surface",
+            "description": "Works on doors, walls, floors - no installation required."
+          }
+        },
+        {
+          "type": "benefit",
+          "settings": {
+            "icon": "💪",
+            "title": "Fast Results", 
+            "description": "Build visible muscle in just 2-4 weeks."
+          }
+        },
+        {
+          "type": "benefit",
+          "settings": {
+            "icon": "⚡",
+            "title": "10 Min Workouts",
+            "description": "Complete arm workout in just 10 minutes."
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

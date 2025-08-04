@@ -1,0 +1,235 @@
+{{ 'section-product-purchase.css' | asset_url | stylesheet_tag }}
+
+<div class="product-purchase color-{{ section.settings.color_scheme }} gradient" id="buy-now">
+  <div class="page-width section-{{ section.id }}-padding">
+    {%- if section.settings.heading != blank -%}
+      <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin">
+        <h2 class="title h1 center">
+          {{ section.settings.heading | escape }}
+        </h2>
+      </div>
+    {%- endif -%}
+
+    {%- if section.settings.show_bundle_options -%}
+      <div class="product-purchase__bundles">
+        <div class="bundle-options grid grid--1-col grid--3-col-tablet">
+          <!-- Single Product -->
+          <div class="grid__item bundle-option">
+            <div class="bundle-card">
+              <div class="bundle-card__header">
+                <h3 class="bundle-card__title h4">Single Trainer</h3>
+                <div class="bundle-card__price">
+                  <span class="bundle-card__price-current h2">{{ section.settings.single_price }}</span>
+                </div>
+              </div>
+              <div class="bundle-card__features">
+                <ul>
+                  <li>✓ 1x Portable Arm Trainer</li>
+                  <li>✓ Door Anchor Included</li>
+                  <li>✓ Exercise Guide</li>
+                  <li>✓ Free Shipping</li>
+                </ul>
+              </div>
+              <button class="bundle-card__cta button button--secondary" onclick="addToCart('single')">
+                {{ section.settings.cta_text }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Bundle 2 -->
+          <div class="grid__item bundle-option bundle-option--popular">
+            <div class="bundle-card bundle-card--highlighted">
+              <div class="bundle-card__badge">Most Popular</div>
+              <div class="bundle-card__header">
+                <h3 class="bundle-card__title h4">2x Trainers</h3>
+                <div class="bundle-card__price">
+                  <span class="bundle-card__price-current h2">{{ section.settings.bundle_2_price }}</span>
+                  <span class="bundle-card__savings">{{ section.settings.bundle_2_savings }}</span>
+                </div>
+              </div>
+              <div class="bundle-card__features">
+                <ul>
+                  <li>✓ 2x Portable Arm Trainers</li>
+                  <li>✓ 2x Door Anchors</li>
+                  <li>✓ Advanced Exercise Guide</li>
+                  <li>✓ Free Shipping</li>
+                  <li>✓ Share with Family/Friend</li>
+                </ul>
+              </div>
+              <button class="bundle-card__cta button button--primary" onclick="addToCart('bundle2')">
+                {{ section.settings.cta_text }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Bundle 3 -->
+          <div class="grid__item bundle-option">
+            <div class="bundle-card">
+              <div class="bundle-card__header">
+                <h3 class="bundle-card__title h4">3x Trainers</h3>
+                <div class="bundle-card__price">
+                  <span class="bundle-card__price-current h2">{{ section.settings.bundle_3_price }}</span>
+                  <span class="bundle-card__savings">{{ section.settings.bundle_3_savings }}</span>
+                </div>
+              </div>
+              <div class="bundle-card__features">
+                <ul>
+                  <li>✓ 3x Portable Arm Trainers</li>
+                  <li>✓ 3x Door Anchors</li>
+                  <li>✓ Premium Exercise Guide</li>
+                  <li>✓ Free Shipping</li>
+                  <li>✓ Perfect for Whole Family</li>
+                </ul>
+              </div>
+              <button class="bundle-card__cta button button--secondary" onclick="addToCart('bundle3')">
+                {{ section.settings.cta_text }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+
+    {%- if section.settings.show_payment_icons -%}
+      <div class="product-purchase__payment-icons center">
+        <p class="payment-icons__text">We accept:</p>
+        <div class="payment-icons">
+          <span class="payment-icon">💳 Visa</span>
+          <span class="payment-icon">💳 Mastercard</span>
+          <span class="payment-icon">💳 PayPal</span>
+          <span class="payment-icon">💳 Apple Pay</span>
+          <span class="payment-icon">💳 Google Pay</span>
+        </div>
+      </div>
+    {%- endif -%}
+
+    <div class="product-purchase__guarantee center">
+      <p class="guarantee-text">
+        <strong>🔒 Secure Checkout</strong> • <strong>🚚 Free Shipping</strong> • <strong>↩️ 30-Day Money-Back Guarantee</strong>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function addToCart(bundleType) {
+    // This would integrate with Shopify's cart API
+    console.log('Adding to cart:', bundleType);
+    
+    // For demo purposes, show an alert
+    let message = '';
+    switch(bundleType) {
+      case 'single':
+        message = 'Added 1x Portable Arm Trainer to cart!';
+        break;
+      case 'bundle2':
+        message = 'Added 2x Portable Arm Trainers to cart!';
+        break;
+      case 'bundle3':
+        message = 'Added 3x Portable Arm Trainers to cart!';
+        break;
+    }
+    
+    alert(message + ' Proceeding to checkout...');
+    
+    // In a real implementation, this would redirect to checkout
+    // window.location.href = '/cart';
+  }
+</script>
+
+{% schema %}
+{
+  "name": "Product Purchase",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Get Your Product Today",
+      "label": "Heading"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_bundle_options",
+      "default": true,
+      "label": "Show bundle options"
+    },
+    {
+      "type": "text",
+      "id": "single_price",
+      "default": "$29.99",
+      "label": "Single product price"
+    },
+    {
+      "type": "text",
+      "id": "bundle_2_price",
+      "default": "$49.99",
+      "label": "2x bundle price"
+    },
+    {
+      "type": "text",
+      "id": "bundle_2_savings",
+      "default": "Save $10",
+      "label": "2x bundle savings text"
+    },
+    {
+      "type": "text",
+      "id": "bundle_3_price",
+      "default": "$69.99",
+      "label": "3x bundle price"
+    },
+    {
+      "type": "text",
+      "id": "bundle_3_savings",
+      "default": "Save $20",
+      "label": "3x bundle savings text"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "default": "Add To Cart - Free Shipping",
+      "label": "CTA button text"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment_icons",
+      "default": true,
+      "label": "Show payment icons"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "accent-1",
+          "label": "Accent 1"
+        },
+        {
+          "value": "accent-2",
+          "label": "Accent 2"
+        },
+        {
+          "value": "background-1",
+          "label": "Background 1"
+        },
+        {
+          "value": "background-2",
+          "label": "Background 2"
+        },
+        {
+          "value": "inverse",
+          "label": "Inverse"
+        }
+      ],
+      "default": "background-1",
+      "label": "Color scheme"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Purchase"
+    }
+  ]
+}
+{% endschema %}

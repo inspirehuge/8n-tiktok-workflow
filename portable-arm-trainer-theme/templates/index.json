@@ -1,0 +1,224 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero-product",
+      "settings": {
+        "heading": "Build Stronger Arms In Just 10 Minutes Daily",
+        "subheading": "The Ultimate Portable Arm Strength Trainer - Used by 50,000+ Fitness Enthusiasts",
+        "show_benefits": true,
+        "benefit_1": "✓ No Noise - Use Anywhere",
+        "benefit_2": "✓ Works on Any Surface", 
+        "benefit_3": "✓ Build Muscle Fast",
+        "benefit_4": "✓ Portable & Compact",
+        "cta_text": "Get Yours Now - $29.99",
+        "cta_link": "#buy-now",
+        "show_video": true,
+        "video_url": "",
+        "image_position": "right",
+        "color_scheme": "background-1"
+      }
+    },
+    "benefits": {
+      "type": "benefit-cards",
+      "blocks": [
+        {
+          "type": "benefit",
+          "settings": {
+            "icon": "🔇",
+            "title": "Silent Operation",
+            "description": "Work out anytime without disturbing others. Perfect for apartments and shared spaces."
+          }
+        },
+        {
+          "type": "benefit", 
+          "settings": {
+            "icon": "🏠",
+            "title": "Any Surface",
+            "description": "Works on doors, walls, floors - no installation required. Take it anywhere."
+          }
+        },
+        {
+          "type": "benefit",
+          "settings": {
+            "icon": "💪",
+            "title": "Fast Results",
+            "description": "Build visible arm muscle in just 2-4 weeks with our proven resistance system."
+          }
+        },
+        {
+          "type": "benefit",
+          "settings": {
+            "icon": "⚡",
+            "title": "10 Min Workouts",
+            "description": "Get a complete arm workout in just 10 minutes. Perfect for busy schedules."
+          }
+        }
+      ],
+      "settings": {
+        "heading": "Why Choose Our Arm Trainer?",
+        "color_scheme": "background-2"
+      }
+    },
+    "demo": {
+      "type": "product-demo",
+      "settings": {
+        "heading": "See It In Action",
+        "video_url": "",
+        "autoplay": true,
+        "show_controls": false,
+        "color_scheme": "background-1"
+      }
+    },
+    "reviews": {
+      "type": "social-proof",
+      "blocks": [
+        {
+          "type": "review",
+          "settings": {
+            "stars": 5,
+            "review_text": "I've been using this for 3 weeks and already see definition in my arms! So convenient for my small apartment.",
+            "reviewer_name": "Sarah M.",
+            "reviewer_location": "New York, NY",
+            "avatar_url": ""
+          }
+        },
+        {
+          "type": "review",
+          "settings": {
+            "stars": 5,
+            "review_text": "Finally found something that actually works! No more expensive gym memberships. This is all I need.",
+            "reviewer_name": "Mike R.",
+            "reviewer_location": "Los Angeles, CA", 
+            "avatar_url": ""
+          }
+        },
+        {
+          "type": "review",
+          "settings": {
+            "stars": 5,
+            "review_text": "Love how quiet it is. I can work out early morning without waking my roommates. Great quality too!",
+            "reviewer_name": "Jessica L.",
+            "reviewer_location": "Chicago, IL",
+            "avatar_url": ""
+          }
+        }
+      ],
+      "settings": {
+        "heading": "Join 50,000+ Happy Customers",
+        "show_trustpilot": true,
+        "overall_rating": "4.8",
+        "total_reviews": "2,847",
+        "color_scheme": "background-1"
+      }
+    },
+    "faq": {
+      "type": "faq-section",
+      "blocks": [
+        {
+          "type": "question",
+          "settings": {
+            "question": "How does the Portable Arm Trainer work?",
+            "answer": "Our trainer uses advanced resistance technology that adapts to your strength level. Simply attach to any door, wall, or use on the floor for a complete arm workout targeting biceps, triceps, and forearms."
+          }
+        },
+        {
+          "type": "question", 
+          "settings": {
+            "question": "What's included in my order?",
+            "answer": "You'll receive the Portable Arm Trainer, door anchor, wall mount, exercise guide with 15+ workouts, and our exclusive mobile app access. Everything you need to start building stronger arms immediately."
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "question": "How long until I see results?",
+            "answer": "Most customers notice increased strength within 1 week and visible muscle definition within 2-4 weeks with consistent 10-minute daily workouts. Results may vary based on individual fitness level."
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "question": "What's your return policy?",
+            "answer": "We offer a 30-day money-back guarantee. If you're not completely satisfied with your results, return it for a full refund - no questions asked."
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "question": "Is shipping really free?",
+            "answer": "Yes! We offer FREE shipping to anywhere in the USA. Your order typically arrives within 3-5 business days via USPS Priority Mail with tracking included."
+          }
+        },
+        {
+          "type": "question",
+          "settings": {
+            "question": "What's the weight limit?",
+            "answer": "Our trainer is designed for users up to 300 lbs and provides adjustable resistance from 10-150 lbs equivalent. Perfect for beginners to advanced fitness enthusiasts."
+          }
+        }
+      ],
+      "settings": {
+        "heading": "Frequently Asked Questions",
+        "color_scheme": "background-2"
+      }
+    },
+    "guarantee": {
+      "type": "trust-guarantee",
+      "blocks": [
+        {
+          "type": "trust_item",
+          "settings": {
+            "icon": "🚚",
+            "title": "Free Shipping",
+            "description": "Fast & free delivery nationwide"
+          }
+        },
+        {
+          "type": "trust_item",
+          "settings": {
+            "icon": "🔒",
+            "title": "Secure Payment",
+            "description": "256-bit SSL encryption"
+          }
+        },
+        {
+          "type": "trust_item",
+          "settings": {
+            "icon": "↩️",
+            "title": "30-Day Guarantee",
+            "description": "100% satisfaction or money back"
+          }
+        }
+      ],
+      "settings": {
+        "heading": "Risk-Free Purchase",
+        "subheading": "100% Satisfaction Guaranteed or Your Money Back",
+        "color_scheme": "accent-1"
+      }
+    },
+    "buy_now": {
+      "type": "product-purchase",
+      "settings": {
+        "heading": "Get Your Portable Arm Trainer Today",
+        "show_bundle_options": true,
+        "single_price": "$29.99",
+        "bundle_2_price": "$49.99",
+        "bundle_2_savings": "Save $10",
+        "bundle_3_price": "$69.99", 
+        "bundle_3_savings": "Save $20",
+        "cta_text": "Add To Cart - Free Shipping",
+        "show_payment_icons": true,
+        "color_scheme": "background-1"
+      }
+    }
+  },
+  "order": [
+    "hero",
+    "benefits", 
+    "demo",
+    "reviews",
+    "faq",
+    "guarantee",
+    "buy_now"
+  ]
+}

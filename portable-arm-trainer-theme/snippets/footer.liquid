@@ -1,0 +1,73 @@
+<footer class="footer color-background-1 gradient section-padding">
+  <div class="footer__content-top page-width">
+    <div class="footer-block--newsletter">
+      <div class="footer-block__heading">
+        <h2 class="footer-block__heading h3">{{ shop.name }}</h2>
+      </div>
+      <div class="footer-block__details-content">
+        <p>Transform your arms with our portable strength trainer. Join thousands of satisfied customers building stronger arms from home.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer__content-bottom">
+    <div class="footer__content-bottom-wrapper page-width">
+      <div class="footer__column footer__localization isolate">
+        <!-- Payment Icons -->
+        <div class="footer__payment">
+          <span class="visually-hidden">Payment methods</span>
+          <ul class="list list--inline" role="list">
+            <li class="list__item">
+              <span class="payment-icon">💳 Visa</span>
+            </li>
+            <li class="list__item">
+              <span class="payment-icon">💳 Mastercard</span>
+            </li>
+            <li class="list__item">
+              <span class="payment-icon">💳 PayPal</span>
+            </li>
+            <li class="list__item">
+              <span class="payment-icon">💳 Apple Pay</span>
+            </li>
+            <li class="list__item">
+              <span class="payment-icon">💳 Google Pay</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer__column footer__column--info">
+        <ul class="footer__list-social list-unstyled list list--inline" role="list">
+          <li class="list__item">
+            <a href="/pages/privacy-policy" class="link link--text list-social__link">
+              Privacy Policy
+            </a>
+          </li>
+          <li class="list__item">
+            <a href="/pages/terms-of-service" class="link link--text list-social__link">
+              Terms of Service
+            </a>
+          </li>
+          <li class="list__item">
+            <a href="/pages/refund-policy" class="link link--text list-social__link">
+              Refund Policy
+            </a>
+          </li>
+          <li class="list__item">
+            <a href="/pages/contact" class="link link--text list-social__link">
+              Contact Us
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__content-bottom-wrapper page-width">
+      <div class="footer__copyright caption">
+        <small class="copyright__content">
+          &copy; {{ 'now' | date: "%Y" }} {{ shop.name }}. All rights reserved.
+        </small>
+      </div>
+    </div>
+  </div>
+</footer>

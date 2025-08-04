@@ -1,0 +1,194 @@
+{{ 'section-hero-product.css' | asset_url | stylesheet_tag }}
+
+<div class="hero-product color-{{ section.settings.color_scheme }} gradient">
+  <div class="page-width">
+    <div class="hero-product__grid grid grid--1-col grid--2-col-tablet">
+      <div class="grid__item hero-product__content">
+        <div class="hero-product__content-inner">
+          <h1 class="hero-product__heading h0">
+            {{ section.settings.heading | escape }}
+          </h1>
+          
+          {%- if section.settings.subheading != blank -%}
+            <p class="hero-product__subheading h4">
+              {{ section.settings.subheading | escape }}
+            </p>
+          {%- endif -%}
+
+          {%- if section.settings.show_benefits -%}
+            <ul class="hero-product__benefits">
+              {%- if section.settings.benefit_1 != blank -%}
+                <li class="hero-product__benefit">{{ section.settings.benefit_1 }}</li>
+              {%- endif -%}
+              {%- if section.settings.benefit_2 != blank -%}
+                <li class="hero-product__benefit">{{ section.settings.benefit_2 }}</li>
+              {%- endif -%}
+              {%- if section.settings.benefit_3 != blank -%}
+                <li class="hero-product__benefit">{{ section.settings.benefit_3 }}</li>
+              {%- endif -%}
+              {%- if section.settings.benefit_4 != blank -%}
+                <li class="hero-product__benefit">{{ section.settings.benefit_4 }}</li>
+              {%- endif -%}
+            </ul>
+          {%- endif -%}
+
+          <div class="hero-product__buttons">
+            <a href="{{ section.settings.cta_link }}" class="button button--primary button--large" id="buy-now">
+              {{ section.settings.cta_text | escape }}
+            </a>
+          </div>
+
+          <div class="hero-product__trust-badges">
+            <span class="trust-badge">⭐⭐⭐⭐⭐ 4.8/5 (2,847 reviews)</span>
+            <span class="trust-badge">🚚 Free Shipping USA</span>
+            <span class="trust-badge">↩️ 30-Day Guarantee</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid__item hero-product__media">
+        <div class="hero-product__media-wrapper">
+          {%- if section.settings.show_video and section.settings.video_url != blank -%}
+            <div class="hero-product__video">
+              <video autoplay muted loop playsinline>
+                <source src="{{ section.settings.video_url }}" type="video/mp4">
+              </video>
+            </div>
+          {%- else -%}
+            <div class="hero-product__image">
+              <img src="https://via.placeholder.com/600x600/1a1a1a/ffffff?text=Portable+Arm+Trainer" 
+                   alt="Portable Arm Strength Trainer" 
+                   loading="eager"
+                   width="600" 
+                   height="600">
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Hero Product",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Build Stronger Arms In Just 10 Minutes Daily",
+      "label": "Heading"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "default": "The Ultimate Portable Arm Strength Trainer",
+      "label": "Subheading"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_benefits",
+      "default": true,
+      "label": "Show benefits list"
+    },
+    {
+      "type": "text",
+      "id": "benefit_1",
+      "default": "✓ No Noise - Use Anywhere",
+      "label": "Benefit 1"
+    },
+    {
+      "type": "text",
+      "id": "benefit_2", 
+      "default": "✓ Works on Any Surface",
+      "label": "Benefit 2"
+    },
+    {
+      "type": "text",
+      "id": "benefit_3",
+      "default": "✓ Build Muscle Fast", 
+      "label": "Benefit 3"
+    },
+    {
+      "type": "text",
+      "id": "benefit_4",
+      "default": "✓ Portable & Compact",
+      "label": "Benefit 4"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "default": "Get Yours Now - $29.99",
+      "label": "CTA Button Text"
+    },
+    {
+      "type": "text",
+      "id": "cta_link",
+      "default": "#buy-now",
+      "label": "CTA Button Link"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_video",
+      "default": false,
+      "label": "Show video instead of image"
+    },
+    {
+      "type": "url",
+      "id": "video_url",
+      "label": "Video URL"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "right",
+      "label": "Image position"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "accent-1",
+          "label": "Accent 1"
+        },
+        {
+          "value": "accent-2", 
+          "label": "Accent 2"
+        },
+        {
+          "value": "background-1",
+          "label": "Background 1"
+        },
+        {
+          "value": "background-2",
+          "label": "Background 2"
+        },
+        {
+          "value": "inverse",
+          "label": "Inverse"
+        }
+      ],
+      "default": "background-1",
+      "label": "Color scheme"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero Product"
+    }
+  ]
+}
+{% endschema %}
