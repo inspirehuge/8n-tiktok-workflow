@@ -32,6 +32,19 @@
     },
     {
       "parameters": {
+        "jsCode": "// Filter items based on positive sentiment in comments\nconst items = $input.all();\n\nconst filteredItems = items.filter(item => {\n  const itemData = item.json;\n  const comments = itemData.commentList || [];\n  \n  // Enhanced positive keywords with sentiment analysis\n  const positiveKeywords = [\n    'love', 'helped', 'amazing', 'relieved', 'perfect', 'comfortable', 'works', 'good', 'recommend', 'changed', 'wow',\n    'excellent', 'fantastic', 'awesome', 'brilliant', 'outstanding', 'incredible', 'superb', 'wonderful', 'great',\n    'satisfied', 'happy', 'pleased', 'impressed', 'delighted', 'thrilled', 'grateful', 'thankful',\n    'effective', 'helpful', 'useful', 'beneficial', 'valuable', 'worthwhile', 'game-changer',\n    'best', 'top', 'quality', 'premium', 'superior', 'flawless', 'smooth', 'easy'\n  ];\n  \n  // Check if any comment contains positive keywords\n  const hasPositiveComment = comments.some(comment => {\n    if (!comment.text) return false;\n    const text = comment.text.toLowerCase();\n    return positiveKeywords.some(keyword => text.includes(keyword));\n  });\n  \n  return hasPositiveComment;\n}).map(item => {\n  return {\n    json: {\n      ...item.json,\n      videoUrl: item.json.videoUrl,\n      sentimentScore: 'positive',\n      filteredReason: 'Contains positive sentiment in comments'\n    }\n  };\n});\n\nreturn filteredItems;"
+      },
+      "id": "sentiment-filter-node-1234",
+      "name": "Filter by Positive Sentiment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        570,
+        300
+      ]
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -58,7 +71,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        680,
+        790,
         300
       ]
     },
@@ -71,7 +84,7 @@
         "contentType": "json",
         "body": {
           "chat_id": "TELEGRAM_CHAT_ID",
-          "text": "🔥 Yeni Ürün Videosu!\n🗣️ Metin: {{ $json[\"title\"] || \"metin yok\" }}\n🏷️ Etiketler: {{ $json[\"hashtags\"] || \"etiket yok\" }}\n🎬 Video: {{ $json[\"videoUrl\"] || \"link bulunamadı\" }}"
+          "text": "🔥 Yeni Ürün Videosu!\n🗣️ Metin: {{ $json[\"title\"] || \"metin yok\" }}\n🏷️ Etiketler: {{ $json[\"hashtags\"] || \"etiket yok\" }}\n🎬 Video: {{ $json[\"videoUrl\"] || \"link bulunamadı\" }}\n✨ Sentiment: {{ $json[\"sentimentScore\"] || \"unknown\" }}"
         },
         "options": {}
       },
@@ -80,7 +93,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        900,
+        1010,
         300
       ]
     }
@@ -98,6 +111,17 @@
       ]
     },
     "Fetch TikTok Data": {
+      "main": [
+        [
+          {
+            "node": "Filter by Positive Sentiment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter by Positive Sentiment": {
       "main": [
         [
           {
