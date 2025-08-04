@@ -1,0 +1,357 @@
+{
+  "name": "TikTok Positive Sentiment Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "value": 2
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "apifyApi",
+        "resource": "dataset",
+        "operation": "getItems",
+        "datasetId": "YOUR_APIFY_DATASET_ID",
+        "format": "json",
+        "limit": 50,
+        "additionalFields": {
+          "clean": true,
+          "desc": true
+        }
+      },
+      "id": "apify-dataset",
+      "name": "Fetch TikTok Data",
+      "type": "n8n-nodes-base.apify",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "apifyApi": {
+          "id": "apify-credentials-placeholder",
+          "name": "Apify API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Positive keywords to search for\nconst positiveKeywords = [\n  'love', 'great', 'helped', 'amazing', 'awesome', 'fantastic', \n  'perfect', 'excellent', 'wonderful', 'incredible', 'brilliant',\n  'outstanding', 'superb', 'magnificent', 'marvelous', 'phenomenal',\n  'inspiring', 'motivating', 'helpful', 'useful', 'valuable',\n  'appreciate', 'grateful', 'thank you', 'thanks', 'blessing'\n];\n\n// Function to check if text contains positive keywords\nfunction containsPositiveKeywords(text) {\n  if (!text) return false;\n  const lowerText = text.toLowerCase();\n  return positiveKeywords.some(keyword => lowerText.includes(keyword));\n}\n\n// Function to extract positive comment snippet\nfunction extractPositiveSnippet(comments, maxLength = 200) {\n  if (!comments || !Array.isArray(comments)) return null;\n  \n  for (const comment of comments) {\n    const commentText = comment.text || comment.comment || comment.content || '';\n    if (containsPositiveKeywords(commentText)) {\n      // Return truncated comment if too long\n      return commentText.length > maxLength \n        ? commentText.substring(0, maxLength) + '...' \n        : commentText;\n    }\n  }\n  return null;\n}\n\n// Process each TikTok video item\nconst processedItems = [];\n\nfor (const item of $input.all()) {\n  const videoData = item.json;\n  \n  // Extract video information\n  const videoUrl = videoData.webVideoUrl || videoData.url || videoData.shareUrl || '';\n  const comments = videoData.comments || [];\n  const authorStats = videoData.authorMeta || videoData.author || {};\n  \n  // Check if any comments contain positive keywords\n  const positiveSnippet = extractPositiveSnippet(comments);\n  \n  if (positiveSnippet && videoUrl) {\n    // Extract creator stats\n    const creatorStats = {\n      username: authorStats.name || authorStats.username || 'Unknown',\n      followers: authorStats.fans || authorStats.followerCount || 0,\n      likes: authorStats.heart || authorStats.heartCount || 0,\n      videos: authorStats.video || authorStats.videoCount || 0,\n      verified: authorStats.verified || false\n    };\n    \n    // Extract video stats\n    const videoStats = {\n      views: videoData.playCount || videoData.viewCount || 0,\n      likes: videoData.diggCount || videoData.likeCount || 0,\n      shares: videoData.shareCount || 0,\n      comments: videoData.commentCount || comments.length || 0\n    };\n    \n    processedItems.push({\n      json: {\n        videoUrl: videoUrl,\n        positiveComment: positiveSnippet,\n        creatorStats: creatorStats,\n        videoStats: videoStats,\n        videoDescription: videoData.text || videoData.desc || '',\n        videoId: videoData.id || '',\n        timestamp: new Date().toISOString()\n      }\n    });\n  }\n}\n\nreturn processedItems;"
+      },
+      "id": "analyze-sentiment",
+      "name": "Analyze Comments for Positive Sentiment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-positive-found",
+              "leftValue": "={{ $json.positiveComment }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-positive",
+      "name": "Filter Positive Results",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format the message for Telegram\nconst data = $json;\n\n// Format numbers with commas\nfunction formatNumber(num) {\n  return new Intl.NumberFormat().format(num || 0);\n}\n\n// Create verification badge\nconst verificationBadge = data.creatorStats.verified ? '✅' : '';\n\n// Format the Telegram message\nconst message = `🎯 *Positive TikTok Mention Found!*\n\n📱 *Video Details:*\n• URL: ${data.videoUrl}\n• Views: ${formatNumber(data.videoStats.views)}\n• Likes: ${formatNumber(data.videoStats.likes)}\n• Comments: ${formatNumber(data.videoStats.comments)}\n\n👤 *Creator Stats:* ${verificationBadge}\n• Username: @${data.creatorStats.username}\n• Followers: ${formatNumber(data.creatorStats.followers)}\n• Total Likes: ${formatNumber(data.creatorStats.likes)}\n• Total Videos: ${formatNumber(data.creatorStats.videos)}\n\n💬 *Positive Comment:*\n\"${data.positiveComment}\"\n\n📝 *Video Description:*\n${data.videoDescription ? data.videoDescription.substring(0, 150) + (data.videoDescription.length > 150 ? '...' : '') : 'No description available'}\n\n⏰ *Detected:* ${new Date(data.timestamp).toLocaleString()}\n\n#TikTok #PositiveFeedback #SocialListening`;\n\nreturn [{\n  json: {\n    ...data,\n    telegramMessage: message\n  }\n}];"
+      },
+      "id": "format-message",
+      "name": "Format Telegram Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "telegramApi",
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.telegramMessage }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "disable_web_page_preview": false,
+          "disable_notification": false
+        }
+      },
+      "id": "send-telegram",
+      "name": "Send Telegram Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        1340,
+        220
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-credentials-placeholder",
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log processing results for monitoring\nconst results = {\n  totalVideosProcessed: $('Fetch TikTok Data').all().length,\n  positiveMatchesFound: $('Filter Positive Results').all().length,\n  telegramMessagesSent: $('Send Telegram Notification').all().length,\n  timestamp: new Date().toISOString()\n};\n\nconsole.log('TikTok Positive Sentiment Workflow Results:', results);\n\nreturn [{ json: results }];"
+      },
+      "id": "log-results",
+      "name": "Log Processing Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "merge-results",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1340,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "error-condition",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        900,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "telegramApi",
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "YOUR_TELEGRAM_ADMIN_CHAT_ID",
+        "text": "🚨 *TikTok Monitoring Error*\n\nWorkflow encountered an error:\n{{ $json.error }}\n\nTime: {{ new Date().toLocaleString() }}\n\nPlease check the workflow configuration.",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "send-error-notification",
+      "name": "Send Error Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        580
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-credentials-placeholder",
+          "name": "Telegram Bot API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch TikTok Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch TikTok Data": {
+      "main": [
+        [
+          {
+            "node": "Analyze Comments for Positive Sentiment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Comments for Positive Sentiment": {
+      "main": [
+        [
+          {
+            "node": "Filter Positive Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Positive Results": {
+      "main": [
+        [
+          {
+            "node": "Format Telegram Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Processing Results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Processing Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram Notification": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Processing Results": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2024-01-15T10:00:00.000Z",
+  "updatedAt": "2024-01-15T10:00:00.000Z",
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": {
+      "errorWorkflow": "",
+      "continueOnFail": false
+    }
+  },
+  "staticData": {},
+  "tags": [
+    {
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z",
+      "id": "social-monitoring",
+      "name": "Social Monitoring"
+    },
+    {
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z", 
+      "id": "tiktok",
+      "name": "TikTok"
+    },
+    {
+      "createdAt": "2024-01-15T10:00:00.000Z",
+      "updatedAt": "2024-01-15T10:00:00.000Z",
+      "id": "sentiment-analysis",
+      "name": "Sentiment Analysis"
+    }
+  ],
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "id": "tiktok-positive-sentiment-monitor",
+  "versionId": "1"
+}
