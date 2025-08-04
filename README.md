@@ -1,149 +1,208 @@
-# TikTok Product Tracker - n8n Workflow
+# TikTok Product Scraper to Telegram Workflow
 
-This n8n workflow automatically monitors TikTok for product-related content and sends notifications to Telegram with video details and thumbnails.
+This n8n workflow automatically scrapes TikTok videos using Apify, filters for product-related content, and sends formatted notifications to Telegram with video thumbnails and engagement stats.
 
-## 🚀 Features
+## Features
 
-- **Automated TikTok Scraping**: Uses Apify's TikTok scraper to fetch videos from popular product hashtags
-- **Smart Filtering**: Filters videos based on product-related keywords in text and hashtags
-- **Telegram Notifications**: Sends formatted messages with video details and thumbnails
-- **Batch Processing**: Processes videos one at a time to avoid rate limits
-- **Scheduled Execution**: Runs every hour automatically
+- ⏰ **Automated Scraping**: Runs every hour using cron trigger
+- 🔍 **Smart Filtering**: Filters videos by product-related keywords
+- 📱 **Rich Telegram Messages**: Sends both text and photo messages
+- 📊 **Engagement Stats**: Includes likes, views, shares, and comments
+- 🖼️ **Video Thumbnails**: Sends cover images as photo previews
+- 🚨 **Error Handling**: Notifications for workflow failures
 
-## 📋 Prerequisites
+## Prerequisites
 
-1. **n8n Instance**: Running n8n (cloud or self-hosted)
-2. **Apify Account**: For TikTok scraping
-3. **Telegram Bot**: For sending notifications
+1. **n8n Instance**: Self-hosted or cloud n8n installation
+2. **Apify Account**: Free tier available at [apify.com](https://apify.com)
+3. **Telegram Bot**: Created via [@BotFather](https://t.me/botfather)
+4. **Telegram Chat ID**: Your personal or group chat ID
 
-## 🔧 Setup Instructions
+## Setup Instructions
 
-### 1. Import the Workflow
+### 1. Create Apify Credentials
 
-1. Download the `tiktok-product-tracker.json` file
-2. In n8n, go to **Workflows** → **Import from File**
-3. Select the downloaded JSON file
-4. Click **Import**
+1. Go to your Apify account settings
+2. Generate an API token
+3. In n8n, create new credentials:
+   - **Type**: HTTP Header Auth
+   - **Name**: `Apify API Token`
+   - **Header Name**: `Authorization`
+   - **Header Value**: `Bearer YOUR_APIFY_TOKEN`
 
-### 2. Configure Credentials
+### 2. Create Telegram Bot Credentials
 
-#### Apify API Credentials
-1. Go to [Apify Console](https://console.apify.com/)
-2. Navigate to **Settings** → **Integrations** → **API tokens**
-3. Create a new token or copy existing one
-4. In n8n, go to **Credentials** → **Add Credential** → **Apify API**
-5. Enter your API token
-6. Name it `apify_credentials`
+1. Message [@BotFather](https://t.me/botfather) on Telegram
+2. Create a new bot with `/newbot`
+3. Get your bot token
+4. In n8n, create new credentials:
+   - **Type**: Telegram API
+   - **Name**: `Telegram Bot Token`
+   - **Access Token**: `YOUR_BOT_TOKEN`
 
-#### Telegram Bot Credentials
-1. Create a bot via [@BotFather](https://t.me/botfather) on Telegram
-2. Send `/newbot` and follow instructions
-3. Copy the bot token
-4. Get your chat ID by messaging [@userinfobot](https://t.me/userinfobot)
-5. In n8n, go to **Credentials** → **Add Credential** → **Telegram API**
-6. Enter your bot token
-7. Name it `telegram_credentials`
+### 3. Get Telegram Chat ID
 
-### 3. Set Environment Variables
+**Method 1: Using Bot**
+1. Start a chat with your bot
+2. Send any message
+3. Visit: `https://api.telegram.org/botYOUR_BOT_TOKEN/getUpdates`
+4. Find your chat ID in the response
+
+**Method 2: Using @userinfobot**
+1. Message [@userinfobot](https://t.me/userinfobot)
+2. It will reply with your user ID
+
+### 4. Set Environment Variables
 
 In your n8n instance, set the following environment variable:
-- `TELEGRAM_CHAT_ID`: Your Telegram chat ID (where notifications will be sent)
+- `TELEGRAM_CHAT_ID`: Your Telegram chat ID (e.g., `123456789`)
 
-### 4. Customize Hashtags (Optional)
+### 5. Import Workflow
 
-In the **Apify TikTok Scraper** node, you can modify the hashtags being monitored:
+1. Copy the contents of `tiktok-telegram-workflow.json`
+2. In n8n, go to **Workflows** → **Import from JSON**
+3. Paste the JSON content
+4. Save the workflow
 
+### 6. Configure Credentials
+
+1. Open the imported workflow
+2. For each node with credentials, select the appropriate credential:
+   - **Apify nodes**: Select "Apify API Token"
+   - **Telegram nodes**: Select "Telegram Bot Token"
+
+## Workflow Components
+
+### Nodes Overview
+
+1. **Cron Trigger**: Runs every hour
+2. **Apify TikTok Scraper**: Initiates scraping job
+3. **Wait for Completion**: Monitors scraping progress
+4. **Get Scraping Results**: Retrieves scraped data
+5. **Filter Product Videos**: Filters by keywords
+6. **Split Into Batches**: Processes videos individually
+7. **Set Message Text**: Formats Telegram messages
+8. **Send Telegram Message**: Sends text notification
+9. **Send Telegram Photo**: Sends thumbnail image
+10. **Merge Results**: Combines outputs
+11. **Error Handler**: Manages failures
+
+### Hashtags Monitored
+
+- `#tiktokmademebuyit`
+- `#productreview`
+- `#amazonfinds`
+- `#musthave`
+
+### Product Keywords Filter
+
+The workflow filters videos containing these keywords:
+- buy, purchase, product, review, recommend
+- amazon, link in bio, must have, obsessed
+- game changer, worth it, money, price
+- deal, sale, discount, shopping, haul
+- find, favorite, love this, need this
+- get this, order, checkout, cart
+
+## Message Format
+
+### Text Message
+```
+🎵 *TikTok Product Alert!*
+
+📝 *Caption:*
+[Video caption text]
+
+🏷️ *Hashtags:*
+[Video hashtags]
+
+🔗 *Watch Video:*
+[TikTok video link]
+
+📊 *Engagement Stats:*
+👍 Likes: [formatted number]
+👁️ Views: [formatted number]
+🔄 Shares: [formatted number]
+💬 Comments: [formatted number]
+
+👤 *Creator:* @[username]
+
+#TikTokFinds #ProductReview #MustHave
+```
+
+### Photo Message
+- Video thumbnail image
+- Simplified caption with video details
+
+## Customization
+
+### Modify Hashtags
+Edit the `hashtags` parameter in the "Apify TikTok Scraper" node:
 ```json
-"hashtags": ["tiktokmademebuyit", "amazonfinds", "aliexpressfinds", "viralproduct", "musthave"]
+{
+  "name": "hashtags",
+  "value": "[\"#yourcustomhashtag\", \"#another\"]"
+}
 ```
 
-### 5. Adjust Filtering Keywords (Optional)
+### Adjust Keywords
+Modify the `productKeywords` array in the "Filter Product Videos" node.
 
-In the **Filter Product Videos** node, you can modify the product-related keywords:
+### Change Schedule
+Update the cron trigger interval:
+- Every 30 minutes: `hoursInterval: 0.5`
+- Every 2 hours: `hoursInterval: 2`
+- Daily at 9 AM: Use cron expression `0 9 * * *`
 
-```
-product|buy|musthave|wishlist|finds|review|unboxing|haul|amazon|aliexpress|organizerfinds|gymfinds|beautyfinds|viralproduct|testedontiktok|recommendation|worthit
-```
+### Modify Message Format
+Edit the message templates in the "Set Message Text" node.
 
-## 🔄 Workflow Components
-
-1. **Schedule Trigger**: Runs every hour
-2. **Apify TikTok Scraper**: Fetches videos from specified hashtags
-3. **Filter Product Videos**: Filters videos based on product keywords
-4. **Split In Batches**: Processes videos one at a time
-5. **Send Telegram Message**: Sends formatted product notification
-6. **Check If Image Available**: Verifies thumbnail availability
-7. **Send Telegram Photo**: Sends video thumbnail
-8. **Merge Results**: Combines message and photo results
-9. **Check Batch Complete**: Manages batch processing loop
-10. **Send Completion Message**: Notifies when scan is complete
-
-## 📱 Telegram Message Format
-
-Each product notification includes:
-- 🔥 Attention-grabbing header
-- 💬 Video text content
-- 🏷️ Relevant hashtags
-- 🎥 Direct link to TikTok video
-- 📊 Engagement stats (likes, comments, shares, views)
-- 📸 Video thumbnail (if available)
-
-## ⚙️ Configuration Options
-
-### Adjust Scan Frequency
-Modify the **Schedule Trigger** node to change how often the workflow runs:
-- Every 30 minutes: `{"field": "minutes", "value": 30}`
-- Every 2 hours: `{"field": "hours", "value": 2}`
-- Daily: `{"field": "days", "value": 1}`
-
-### Change Results Per Page
-In the **Apify TikTok Scraper** node, modify `resultsPerPage` (default: 50)
-
-### Batch Size
-In the **Split In Batches** node, modify `batchSize` (default: 1)
-
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
-1. **No videos found**: Check if hashtags are popular and contain product content
-2. **Apify rate limits**: Reduce `resultsPerPage` or increase scan interval
-3. **Telegram not working**: Verify bot token and chat ID
-4. **Filtering too strict**: Adjust keyword regex patterns
+1. **No videos found**: Check if hashtags are popular and recent
+2. **Apify timeout**: Increase `maxWaitTime` in wait node
+3. **Telegram errors**: Verify bot token and chat ID
+4. **Rate limiting**: Reduce scraping frequency
 
 ### Debug Mode
 
-Enable debug mode in n8n to see detailed execution logs and troubleshoot issues.
+1. Enable workflow execution logs
+2. Test individual nodes using "Execute Node"
+3. Check Apify dashboard for scraping job status
 
-## 📊 Expected Results
+### Error Notifications
 
-- **Videos per scan**: 10-50 (depending on hashtag popularity)
-- **Filtered results**: 20-80% of scraped videos (varies by hashtag)
-- **Notifications**: 1 message + 1 photo per qualifying video
-- **Execution time**: 2-5 minutes per scan
+The workflow includes error handling that sends Telegram notifications when:
+- Apify scraping fails
+- Timeout occurs
+- Invalid credentials
+- Network issues
 
-## 🔒 Security Notes
+## Limitations
 
-- Keep your Apify API token secure
-- Use environment variables for sensitive data
-- Consider using Telegram bot with restricted permissions
-- Monitor API usage to avoid unexpected charges
+- **Apify Free Tier**: Limited monthly usage
+- **TikTok Rate Limits**: May affect scraping frequency
+- **Telegram Limits**: 30 messages per second per bot
+- **Image Loading**: Some thumbnails may fail to load
 
-## 📈 Optimization Tips
+## Contributing
 
-1. **Focus hashtags**: Use more specific product-related hashtags for better results
-2. **Keyword tuning**: Regularly update filtering keywords based on trends
-3. **Rate limiting**: Adjust batch size and delays to respect API limits
-4. **Storage**: Clean up old execution data regularly
+Feel free to enhance this workflow by:
+- Adding more social platforms
+- Improving keyword filtering
+- Adding sentiment analysis
+- Creating analytics dashboards
 
-## 🆘 Support
+## License
 
-If you encounter issues:
-1. Check n8n execution logs
-2. Verify all credentials are correctly configured
-3. Test individual nodes to isolate problems
-4. Check Apify and Telegram API status pages
+This workflow is provided as-is for educational and personal use. Ensure compliance with TikTok's terms of service and applicable laws when scraping content.
 
-## 📄 License
+## Support
 
-This workflow is provided as-is for educational and personal use. Please respect TikTok's terms of service and rate limits when using this automation.
+For issues and questions:
+1. Check n8n community forum
+2. Review Apify documentation
+3. Verify Telegram Bot API limits
+4. Test individual workflow components
