@@ -1,0 +1,115 @@
+{{ 'section-product-demo.css' | asset_url | stylesheet_tag }}
+
+<div class="product-demo color-{{ section.settings.color_scheme }} gradient">
+  <div class="page-width section-{{ section.id }}-padding">
+    {%- if section.settings.heading != blank -%}
+      <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin">
+        <h2 class="title h1 center">
+          {{ section.settings.heading | escape }}
+        </h2>
+      </div>
+    {%- endif -%}
+
+    <div class="product-demo__media">
+      {%- if section.settings.video_url != blank -%}
+        <div class="product-demo__video">
+          <video 
+            {% if section.settings.autoplay %}autoplay{% endif %} 
+            {% unless section.settings.show_controls %}muted{% endunless %}
+            loop 
+            playsinline
+            {% if section.settings.show_controls %}controls{% endif %}
+            class="product-demo__video-element"
+          >
+            <source src="{{ section.settings.video_url }}" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      {%- else -%}
+        <div class="product-demo__placeholder">
+          <img src="https://via.placeholder.com/1200x675/1a1a1a/ffffff?text=Product+Demo+Video" 
+               alt="Product Demo" 
+               loading="lazy"
+               width="1200" 
+               height="675">
+          <div class="product-demo__play-button">
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="40" cy="40" r="40" fill="rgba(255,255,255,0.9)"/>
+              <path d="M32 24L56 40L32 56V24Z" fill="#1a1a1a"/>
+            </svg>
+          </div>
+        </div>
+      {%- endif -%}
+    </div>
+
+    <div class="product-demo__description center">
+      <p class="h5">Watch how easy it is to get a complete arm workout anywhere, anytime!</p>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Product Demo",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "See It In Action",
+      "label": "Heading"
+    },
+    {
+      "type": "url",
+      "id": "video_url",
+      "label": "Video URL"
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "default": true,
+      "label": "Autoplay video"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_controls",
+      "default": false,
+      "label": "Show video controls"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "accent-1",
+          "label": "Accent 1"
+        },
+        {
+          "value": "accent-2",
+          "label": "Accent 2"
+        },
+        {
+          "value": "background-1",
+          "label": "Background 1"
+        },
+        {
+          "value": "background-2",
+          "label": "Background 2"
+        },
+        {
+          "value": "inverse",
+          "label": "Inverse"
+        }
+      ],
+      "default": "background-1",
+      "label": "Color scheme"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Demo"
+    }
+  ]
+}
+{% endschema %}

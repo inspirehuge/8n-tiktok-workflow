@@ -1,0 +1,46 @@
+<header class="header header--middle-left page-width header--has-menu">
+  <div class="header__inner">
+    <div class="header__heading">
+      <h1 class="header__heading-text h2">
+        <a href="{{ routes.root_url }}" class="header__heading-link link link--text focus-inset">
+          {%- if settings.logo != blank -%}
+            <div class="header__heading-logo-wrapper">
+              <img src="{{ settings.logo | image_url: width: 200 }}" 
+                   alt="{{ shop.name | escape }}"
+                   class="header__heading-logo"
+                   width="200"
+                   height="auto">
+            </div>
+          {%- else -%}
+            {{ shop.name }}
+          {%- endif -%}
+        </a>
+      </h1>
+    </div>
+
+    <nav class="header__inline-menu">
+      <ul class="list-menu list-menu--inline" role="list">
+        <li>
+          <a href="#benefits" class="header__menu-item list-menu__item link link--text focus-inset">
+            <span>Benefits</span>
+          </a>
+        </li>
+        <li>
+          <a href="#reviews" class="header__menu-item list-menu__item link link--text focus-inset">
+            <span>Reviews</span>
+          </a>
+        </li>
+        <li>
+          <a href="#faq" class="header__menu-item list-menu__item link link--text focus-inset">
+            <span>FAQ</span>
+          </a>
+        </li>
+        <li>
+          <a href="#buy-now" class="header__menu-item list-menu__item link link--text focus-inset header__menu-item--cta">
+            <span>Buy Now</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>

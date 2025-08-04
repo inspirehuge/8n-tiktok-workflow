@@ -1,0 +1,155 @@
+{{ 'section-trust-guarantee.css' | asset_url | stylesheet_tag }}
+
+<div class="trust-guarantee color-{{ section.settings.color_scheme }} gradient">
+  <div class="page-width section-{{ section.id }}-padding">
+    {%- if section.settings.heading != blank -%}
+      <div class="title-wrapper-with-link title-wrapper--self-padded-mobile title-wrapper--no-top-margin">
+        <h2 class="title h1 center">
+          {{ section.settings.heading | escape }}
+        </h2>
+        {%- if section.settings.subheading != blank -%}
+          <p class="trust-guarantee__subheading h4 center">
+            {{ section.settings.subheading | escape }}
+          </p>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div class="trust-guarantee__grid grid grid--1-col grid--3-col-tablet">
+      {%- for block in section.blocks -%}
+        <div class="grid__item trust-guarantee__item" {{ block.shopify_attributes }}>
+          <div class="trust-item">
+            <div class="trust-item__icon">
+              {{ block.settings.icon }}
+            </div>
+            <h3 class="trust-item__title h4">
+              {{ block.settings.title | escape }}
+            </h3>
+            <p class="trust-item__description">
+              {{ block.settings.description | escape }}
+            </p>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+
+    <div class="trust-guarantee__cta center">
+      <p class="trust-guarantee__guarantee-text h3">
+        <strong>Try it risk-free for 30 days!</strong>
+      </p>
+      <p class="trust-guarantee__guarantee-subtext">
+        If you're not completely satisfied, return it for a full refund - no questions asked.
+      </p>
+      <a href="#buy-now" class="button button--primary button--large">
+        Get Your Risk-Free Trial
+      </a>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Trust & Guarantee",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "default": "Risk-Free Purchase",
+      "label": "Heading"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "default": "100% Satisfaction Guaranteed or Your Money Back",
+      "label": "Subheading"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "accent-1",
+          "label": "Accent 1"
+        },
+        {
+          "value": "accent-2",
+          "label": "Accent 2"
+        },
+        {
+          "value": "background-1",
+          "label": "Background 1"
+        },
+        {
+          "value": "background-2",
+          "label": "Background 2"
+        },
+        {
+          "value": "inverse",
+          "label": "Inverse"
+        }
+      ],
+      "default": "accent-1",
+      "label": "Color scheme"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "trust_item",
+      "name": "Trust Item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "icon",
+          "default": "🔒",
+          "label": "Icon (emoji or text)"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "default": "Trust Item",
+          "label": "Title"
+        },
+        {
+          "type": "text",
+          "id": "description",
+          "default": "Trust item description",
+          "label": "Description"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Trust & Guarantee",
+      "blocks": [
+        {
+          "type": "trust_item",
+          "settings": {
+            "icon": "🚚",
+            "title": "Free Shipping",
+            "description": "Fast & free delivery nationwide"
+          }
+        },
+        {
+          "type": "trust_item",
+          "settings": {
+            "icon": "🔒",
+            "title": "Secure Payment",
+            "description": "256-bit SSL encryption"
+          }
+        },
+        {
+          "type": "trust_item",
+          "settings": {
+            "icon": "↩️",
+            "title": "30-Day Guarantee",
+            "description": "100% satisfaction or money back"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
