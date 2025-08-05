@@ -1,24 +1,25 @@
-# Google Sheets to Telegram Bot
+# 🔧 Reddit → TikTok Product Discovery → Google Sheets → Telegram Bot
 
-This Python script connects to a Google Sheet named "Koladata" and automatically sends new rows as formatted Markdown messages to a Telegram bot. It runs continuously, checking for new data every 5 minutes.
+A Python-based system that automatically:
+1. 🔍 Scrapes Reddit for user pain/problem posts
+2. 🎯 Extracts keywords from those problems  
+3. 🎥 Searches TikTok for matching product videos (simulated)
+4. 📊 Appends matched product data to Google Sheets
+5. 💬 Triggers Telegram notifications via your existing bot
 
-## Features
+## 📁 Project Structure
 
-- Connects to Google Sheets using service account credentials
-- Sends formatted Markdown messages to Telegram
-- Tracks sent rows to avoid duplicates
-- Runs in an infinite loop with 5-minute intervals
-- Comprehensive logging
-- Error handling and retry logic
+```
+├── reddit_scraper.py      # Scrapes Reddit for problems
+├── tiktok_matcher.py      # Matches problems to TikTok products
+├── update_sheet.py        # Updates Google Sheets
+├── main.py               # Main controller script
+├── requirements.txt      # Python dependencies
+├── README.md            # This file
+└── service_account.json # Google Sheets credentials (you need to create this)
+```
 
-## Requirements
-
-- Python 3.7+
-- Google Sheets API access
-- Telegram Bot Token
-- Service account JSON file
-
-## Setup Instructions
+## 🚀 Quick Start
 
 ### 1. Install Dependencies
 
@@ -26,146 +27,242 @@ This Python script connects to a Google Sheet named "Koladata" and automatically
 pip install -r requirements.txt
 ```
 
-### 2. Google Sheets API Setup
+### 2. Set Up Reddit API
 
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Enable the Google Sheets API and Google Drive API
-4. Create a service account:
-   - Go to "IAM & Admin" > "Service Accounts"
-   - Click "Create Service Account"
-   - Fill in the details and create
-   - Generate a JSON key file
+1. Go to [Reddit Apps](https://www.reddit.com/prefs/apps)
+2. Click "Create App" or "Create Another App"
+3. Choose "script" type
+4. Note your `client_id` and `client_secret`
+
+### 3. Set Up Google Sheets API
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Google Sheets API and Google Drive API
+4. Create a Service Account
 5. Download the JSON key file and rename it to `service_account.json`
-6. Place the file in the same directory as `main.py`
-7. Share your Google Sheet with the service account email (found in the JSON file)
+6. Share your Google Sheet with the service account email
 
-### 3. Telegram Bot Setup
+### 4. Configure Environment Variables
 
-1. Create a new bot:
-   - Message [@BotFather](https://t.me/botfather) on Telegram
-   - Send `/newbot` command
-   - Follow the instructions to create your bot
-   - Save the bot token
-2. Get your chat ID:
-   - Start a conversation with your bot
-   - Send a message to your bot
-   - Visit `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
-   - Find your chat ID in the response
-
-### 4. Environment Configuration
-
-1. Copy the example environment file:
-   ```bash
-   cp .env.example .env
-   ```
-2. Edit `.env` and add your credentials:
-   ```
-   TELEGRAM_TOKEN=your_actual_bot_token
-   TELEGRAM_CHAT_ID=your_actual_chat_id
-   ```
-
-### 5. Google Sheet Setup
-
-Make sure your Google Sheet:
-- Is named "Koladata"
-- Has a worksheet named "Sheet1"
-- Has the following columns in order:
-  1. title
-  2. category
-  3. video_url
-  4. description
-  5. date
-  6. views
-  7. source
-
-## Usage
-
-Run the script:
+Create a `.env` file or set environment variables:
 
 ```bash
+# Reddit API
+export REDDIT_CLIENT_ID="your_reddit_client_id"
+export REDDIT_CLIENT_SECRET="your_reddit_client_secret"
+export REDDIT_USER_AGENT="ProductDiscovery/1.0"
+
+# Google Sheets
+export GOOGLE_SHEET_NAME="Product Discovery Sheet"
+export GOOGLE_SERVICE_ACCOUNT_FILE="service_account.json"
+```
+
+### 5. Run the System
+
+```bash
+# Full discovery process
 python main.py
+
+# Test with mock data
+python main.py test
+
+# Setup Google Sheet headers only
+python main.py setup
 ```
 
-The script will:
-1. Connect to your Google Sheet
-2. Check for new rows every 5 minutes
-3. Send each new row as a formatted message to your Telegram bot
-4. Keep track of sent rows to avoid duplicates
-5. Continue running until manually stopped (Ctrl+C)
+## 📊 Google Sheet Format
 
-## Message Format
+The system creates/uses a sheet with these columns:
 
-Each row is sent as a Markdown-formatted message with:
-- Entry number
-- All field values with emojis
-- Timestamp of when the message was sent
+| title | category | videoUrl | description | date | views | source | problem |
+|-------|----------|----------|-------------|------|-------|--------|---------|
+| Smart Arch Support Insoles | Foot Care | https://tiktok.com/... | Great for retail workers | 2024-01-15 | 1.2M | TikTok | foot pain from standing |
 
-Example:
+## 🎯 Target Subreddits
+
+The system monitors these subreddits for pain/problem posts:
+
+- `r/BuyItForLife` - Durable product recommendations
+- `r/Frugal` - Budget-friendly solutions
+- `r/ChronicPain` - Chronic pain discussions
+- `r/backpain` - Back pain specific
+- `r/plantarfasciitis` - Foot pain specific
+- `r/Productivity` - Work efficiency issues
+- `r/Arthritis` - Joint pain discussions
+- `r/ShoulderPain` - Shoulder issues
+- `r/Sciatica` - Sciatica pain
+
+## 🔧 Configuration Options
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REDDIT_CLIENT_ID` | `your_client_id` | Reddit API client ID |
+| `REDDIT_CLIENT_SECRET` | `your_client_secret` | Reddit API client secret |
+| `REDDIT_USER_AGENT` | `ProductDiscovery/1.0` | Reddit API user agent |
+| `GOOGLE_SHEET_NAME` | `Product Discovery Sheet` | Google Sheet name |
+| `GOOGLE_SERVICE_ACCOUNT_FILE` | `service_account.json` | Path to service account file |
+
+### Customizing Target Keywords
+
+Edit `reddit_scraper.py` to modify the pain/problem keywords:
+
+```python
+pain_keywords = [
+    'pain', 'hurt', 'ache', 'sore', 'chronic', 'help', 'recommend', 
+    'suggestion', 'advice', 'problem', 'issue', 'struggle', 'difficulty',
+    'fatigue', 'tired', 'exhausted', 'relief', 'solution', 'fix'
+]
 ```
-📊 **New Data Entry #2**
 
-🏷️ **Title:** Sample Video Title
-📂 **Category:** Education
-🎥 **Video URL:** https://example.com/video
-📝 **Description:** This is a sample description
-📅 **Date:** 2024-01-15
-👀 **Views:** 1000
-🔗 **Source:** YouTube
+### Adding Product Categories
+
+Edit `tiktok_matcher.py` to add new product categories:
+
+```python
+product_database = {
+    'your_category': [
+        {
+            "title": "Your Product",
+            "category": "Your Category",
+            "videoUrl": "https://www.tiktok.com/@user/video/123",
+            "description": "Product description",
+            "views": "1.0M",
+            "source": "TikTok"
+        }
+    ]
+}
+```
+
+## 🧪 Testing
+
+### Test Individual Components
+
+```bash
+# Test Reddit scraper
+python reddit_scraper.py
+
+# Test TikTok matcher
+python tiktok_matcher.py
+
+# Test Google Sheets updater
+python update_sheet.py
+```
+
+### Run System Test
+
+```bash
+python main.py test
+```
+
+This runs the system with mock data to verify everything works.
+
+## 🔍 How It Works
+
+### 1. Reddit Scraping (`reddit_scraper.py`)
+
+- Connects to Reddit API using PRAW
+- Searches specified subreddits for recent posts (last 7 days)
+- Filters posts containing pain/problem keywords
+- Extracts problem descriptions and relevant keywords
+- Returns structured problem data
+
+### 2. Product Matching (`tiktok_matcher.py`)
+
+- Takes extracted keywords and problem descriptions
+- Matches against simulated TikTok product database
+- Returns relevant products with TikTok-style metadata
+- Limits results to prevent spam (max 3 products per problem)
+
+### 3. Sheet Updates (`update_sheet.py`)
+
+- Connects to Google Sheets using service account
+- Ensures proper headers exist
+- Appends new product data as rows
+- Handles errors gracefully
+
+### 4. Main Controller (`main.py`)
+
+- Orchestrates the entire workflow
+- Provides command-line options for testing and setup
+- Includes comprehensive error handling and logging
+
+## 🚨 Troubleshooting
+
+### Reddit API Issues
+
+**Error: `prawcore.exceptions.ResponseException: received 401 HTTP response`**
+- Check your Reddit API credentials
+- Ensure your app is set to "script" type
+- Verify your user agent string
+
+**Error: `prawcore.exceptions.TooManyRequests`**
+- Reddit API rate limiting - wait and try again
+- Consider reducing the number of subreddits or posts processed
+
+### Google Sheets Issues
+
+**Error: `gspread.exceptions.SpreadsheetNotFound`**
+- Ensure the sheet exists and is shared with your service account email
+- Check the sheet name in your environment variables
+
+**Error: `google.auth.exceptions.DefaultCredentialsError`**
+- Ensure `service_account.json` exists and is valid
+- Check file permissions
+
+### General Issues
+
+**No problems found from Reddit**
+- Reddit API might be rate-limited
+- Try running with test data: `python main.py test`
+- Check if subreddits are accessible
+
+**Products not appearing in Telegram**
+- Ensure your existing Telegram bot is monitoring the Google Sheet
+- Check that products were actually added to the sheet
+- Verify sheet permissions and format
+
+## 📈 Scaling and Production
+
+### For Production Use
+
+1. **Add Real TikTok API Integration**
+   - Replace simulated products with actual TikTok API calls
+   - Consider TikTok's rate limits and terms of service
+
+2. **Implement Duplicate Detection**
+   - Track processed Reddit posts to avoid duplicates
+   - Use database instead of in-memory tracking
+
+3. **Add Scheduling**
+   - Use cron jobs or task schedulers
+   - Consider running every few hours instead of continuously
+
+4. **Enhanced Error Handling**
+   - Add retry logic for API failures
+   - Implement proper logging to files
+   - Add monitoring and alerting
+
+5. **Database Integration**
+   - Store processed data in a database
+   - Enable better analytics and reporting
+
+### Performance Optimization
+
+- Use batch processing for Google Sheets updates
+- Implement caching for frequently accessed data
+- Add connection pooling for API calls
+
+## 📄 License
+
+This project is provided as-is for educational and personal use.
+
+## 🤝 Contributing
+
+Feel free to submit issues, feature requests, or pull requests to improve the system.
 
 ---
-*Sent at 2024-01-15 14:30:25*
-```
 
-## Logging
-
-The script provides comprehensive logging with timestamps for:
-- Connection status
-- New rows processed
-- Messages sent
-- Errors and retries
-
-## Error Handling
-
-The script includes robust error handling for:
-- Google Sheets API connection issues
-- Telegram API failures
-- Network connectivity problems
-- Invalid data formats
-
-## File Structure
-
-```
-.
-├── main.py              # Main script
-├── requirements.txt     # Python dependencies
-├── .env                 # Environment variables (create from .env.example)
-├── .env.example         # Environment template
-├── service_account.json # Google service account credentials (you need to add this)
-└── README.md           # This file
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"No module named 'gspread'"**
-   - Run `pip install -r requirements.txt`
-
-2. **"Failed to setup Google Sheets connection"**
-   - Check that `service_account.json` exists and is valid
-   - Ensure the Google Sheets API is enabled
-   - Verify the sheet is shared with the service account email
-
-3. **"TELEGRAM_TOKEN and TELEGRAM_CHAT_ID must be set"**
-   - Check that `.env` file exists and contains valid values
-   - Ensure there are no extra spaces in the environment variables
-
-4. **"Failed to open worksheet"**
-   - Verify the sheet name is exactly "Koladata"
-   - Check that the worksheet name is exactly "Sheet1"
-   - Ensure the service account has access to the sheet
-
-## License
-
-MIT License - feel free to modify and use as needed.
+**Note**: This system currently simulates TikTok product searches. For production use, you'll need to integrate with actual TikTok APIs or alternative product discovery services.
